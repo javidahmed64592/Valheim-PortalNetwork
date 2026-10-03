@@ -4,6 +4,8 @@ Teleport to any portal through a map interface without tag linking.
 
 Builders choose whether each portal is visible to everyone or only to them. Everything is checked by the server, so it works on dedicated servers and friend-hosted worlds.
 
+![PortalNetwork Example](https://github.com/javidahmed64592/Valheim-PortalNetwork/raw/main/game_screenshot.png)
+
 ## How to use
 
 1. **Build portals** as normal. Press **Use** on a portal to give it a name. Names are what you see on the map.
