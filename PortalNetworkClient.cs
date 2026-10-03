@@ -45,7 +45,7 @@ namespace PortalNetwork
 
             _enteredPortal = enteredPortal;
             _enteredPosition = enteredPosition;
-            PortalNetworkRpc.SendListRequest(player.GetPlayerID());
+            PortalNetworkRpc.SendListRequest();
         }
 
         internal static void OnPortalListReceived(List<PortalInfo> portals)
@@ -56,14 +56,31 @@ namespace PortalNetwork
             PortalMapPicker.Open(portals, _enteredPortal, _enteredPosition);
         }
 
-        internal static void TeleportTo(Player player, PortalInfo destination)
+        /// <summary>The player clicked a pin. The server confirms the portal is still there and visible.</summary>
+        internal static void RequestTeleport(PortalInfo destination)
         {
-            Vector3 forward = destination.Rotation * Vector3.forward;
-            Vector3 position = destination.Position + forward * ExitDistance + Vector3.up;
+            PortalNetworkRpc.SendTeleportRequest(destination.Id);
+        }
 
-            PortalNetworkPlugin.Log.LogDebug($"Teleporting to '{destination.Name}' at {destination.Position}");
-            player.TeleportTo(position, destination.Rotation, distantTeleport: true);
+        internal static void OnTeleportApproved(string name, Vector3 position, Quaternion rotation)
+        {
+            Player player = Player.m_localPlayer;
+            if (player == null) return;
+
+            Vector3 forward = rotation * Vector3.forward;
+            Vector3 target = position + forward * ExitDistance + Vector3.up;
+
+            PortalNetworkPlugin.Log.LogDebug($"Teleporting to '{name}' at {position}");
+            player.TeleportTo(target, rotation, distantTeleport: true);
             Game.instance.IncrementPlayerStat(PlayerStatType.PortalsUsed);
+        }
+
+        internal static void ShowMessage(string text)
+        {
+            Player player = Player.m_localPlayer;
+            if (player == null) return;
+
+            player.Message(MessageHud.MessageType.Center, text);
         }
     }
 }

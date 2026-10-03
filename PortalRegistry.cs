@@ -13,6 +13,7 @@ namespace PortalNetwork
     {
         public ZDOID Id;
         public string Name;
+        public string TagAuthor;
         public Vector3 Position;
         public Quaternion Rotation;
         public long OwnerId;
@@ -27,10 +28,26 @@ namespace PortalNetwork
         // Portals with no stored value (built before the mod, or never changed) are Public.
         private const PortalVisibility DefaultVisibility = PortalVisibility.Public;
 
-        /// <summary>
-        /// Only meaningful on the server (the host's game in a listen-server setup),
-        /// where ZDOMan holds every portal in the world.
-        /// </summary>
+        /// <summary>True if the ZDO exists right now and is a portal. Server-side only.</summary>
+        internal static bool TryGetPortal(ZDOID id, out ZDO zdo)
+        {
+            zdo = ZDOMan.instance != null ? ZDOMan.instance.GetZDO(id) : null;
+            return zdo != null && Game.instance.PortalPrefabHash.Contains(zdo.GetPrefab());
+        }
+
+        internal static bool IsVisibleTo(PortalInfo info, long playerId)
+        {
+            return info.Visibility == PortalVisibility.Public
+                || (playerId != 0L && info.OwnerId == playerId);
+        }
+
+        /// <summary>The builder may change it. Portals with no recorded builder are open to anyone.</summary>
+        internal static bool CanChange(PortalInfo info, long playerId)
+        {
+            return info.OwnerId == 0L || (playerId != 0L && info.OwnerId == playerId);
+        }
+
+        /// <summary>Only meaningful on the server, where ZDOMan holds every portal in the world.</summary>
         internal static List<PortalInfo> GetVisibleTo(long playerId)
         {
             var result = new List<PortalInfo>();
@@ -39,7 +56,7 @@ namespace PortalNetwork
             foreach (ZDO zdo in ZDOMan.instance.GetPortalList())
             {
                 PortalInfo info = ToInfo(zdo);
-                if (info.Visibility == PortalVisibility.Public || info.OwnerId == playerId)
+                if (IsVisibleTo(info, playerId))
                 {
                     result.Add(info);
                 }
@@ -53,6 +70,7 @@ namespace PortalNetwork
             {
                 Id = zdo.m_uid,
                 Name = zdo.GetString(ZDOVars.s_tag),
+                TagAuthor = zdo.GetString(ZDOVars.s_tagauthor),
                 Position = zdo.GetPosition(),
                 Rotation = zdo.GetRotation(),
                 OwnerId = zdo.GetLong(ZDOVars.s_creator, 0L),

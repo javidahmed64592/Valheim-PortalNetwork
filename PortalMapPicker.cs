@@ -30,7 +30,7 @@ namespace PortalNetwork
             {
                 if (portal.Id == enteredPortal) continue; // no point listing the portal you are standing at
 
-                string label = string.IsNullOrEmpty(portal.Name) ? "Portal" : portal.Name.RemoveRichTextTags();
+                string label = PortalNames.Display(portal);
                 if (portal.Visibility == PortalVisibility.Private) label += " (private)";
 
                 // save: false keeps these out of the character's saved map data.
@@ -80,13 +80,8 @@ namespace PortalNetwork
             if (best == null) return;
 
             PortalInfo destination = best.Portal;
-            Minimap.instance.SetMapMode(Minimap.MapMode.Small); // closes the map; the patch below clears our pins
-
-            Player player = Player.m_localPlayer;
-            if (player != null)
-            {
-                PortalNetworkClient.TeleportTo(player, destination);
-            }
+            Minimap.instance.SetMapMode(Minimap.MapMode.Small); // closes the map; the patch clears our pins
+            PortalNetworkClient.RequestTeleport(destination);
         }
 
         internal static void Close()
