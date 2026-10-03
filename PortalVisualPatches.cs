@@ -17,14 +17,6 @@ namespace PortalNetwork
             ZNetView nview = portal.GetComponent<ZNetView>();
             return nview != null && nview.GetZDO() != null;
         }
-
-        internal static void LogOnce(string patchName)
-        {
-            if (Logged.Add(patchName))
-            {
-                PortalNetworkPlugin.Log.LogInfo($"Visual patch active: {patchName}");
-            }
-        }
     }
 
     // Private methods are patched by name (string) rather than nameof(): the Publicizer
@@ -38,7 +30,6 @@ namespace PortalNetwork
         {
             if (!PortalVisualPatches.IsPlacedPortal(__instance)) return true;
 
-            PortalVisualPatches.LogOnce("HaveTarget");
             __result = true;
             return false; // skip the original
         }
@@ -51,7 +42,6 @@ namespace PortalNetwork
         {
             if (!PortalVisualPatches.IsPlacedPortal(__instance)) return true;
 
-            PortalVisualPatches.LogOnce("TargetFound");
             __result = true;
             return false;
         }
@@ -67,7 +57,6 @@ namespace PortalNetwork
         {
             if (__instance.m_model == null || !PortalVisualPatches.IsPlacedPortal(__instance)) return;
 
-            PortalVisualPatches.LogOnce("Update (emission)");
             __instance.m_model.material.SetColor("_EmissionColor", __instance.m_colorTargetfound);
         }
     }
@@ -82,7 +71,6 @@ namespace PortalNetwork
             if (__instance.m_proximityRoot == null || __instance.m_target_found == null) return;
             if (!PortalVisualPatches.IsPlacedPortal(__instance)) return;
 
-            PortalVisualPatches.LogOnce("UpdatePortal (swirl)");
             Player closest = Player.GetClosestPlayer(__instance.m_proximityRoot.position, __instance.m_activationRange);
             bool active = closest != null && closest.IsTeleportable(__instance.m_allowAllItems);
             __instance.m_target_found.SetActive(active);

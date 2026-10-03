@@ -52,7 +52,7 @@ namespace PortalNetwork
         {
             if (Player.m_localPlayer == null) return;
 
-            PortalNetworkPlugin.Log.LogInfo($"Client: received {portals.Count} portal(s)");
+            PortalNetworkPlugin.Log.LogDebug($"Client: received {portals.Count} portal(s)");
             PortalMapPicker.Open(portals, _enteredPortal, _enteredPosition);
         }
 
@@ -61,7 +61,7 @@ namespace PortalNetwork
             Vector3 forward = destination.Rotation * Vector3.forward;
             Vector3 position = destination.Position + forward * ExitDistance + Vector3.up;
 
-            PortalNetworkPlugin.Log.LogInfo($"Teleporting to '{destination.Name}' at {destination.Position}");
+            PortalNetworkPlugin.Log.LogDebug($"Teleporting to '{destination.Name}' at {destination.Position}");
             player.TeleportTo(position, destination.Rotation, distantTeleport: true);
             Game.instance.IncrementPlayerStat(PlayerStatType.PortalsUsed);
         }

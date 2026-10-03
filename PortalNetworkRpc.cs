@@ -32,7 +32,7 @@ namespace PortalNetwork
         {
             long playerId = package.ReadLong();
             List<PortalInfo> visible = PortalRegistry.GetVisibleTo(playerId);
-            PortalNetworkPlugin.Log.LogInfo(
+            PortalNetworkPlugin.Log.LogDebug(
                 $"Server: list request from peer {sender} (player {playerId}), sending {visible.Count} portal(s)");
 
             var response = new ZPackage();

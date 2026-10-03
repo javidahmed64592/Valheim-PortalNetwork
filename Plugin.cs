@@ -24,7 +24,6 @@ namespace PortalNetwork
             PortalNetworkRpc.Register();
             _harmony = new Harmony(PluginGuid);
             _harmony.PatchAll();
-            Log.LogInfo($"{PluginName} {PluginVersion} loaded");
         }
 
         private void OnDestroy()

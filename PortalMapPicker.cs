@@ -30,7 +30,7 @@ namespace PortalNetwork
             {
                 if (portal.Id == enteredPortal) continue; // no point listing the portal you are standing at
 
-                string label = string.IsNullOrEmpty(portal.Name) ? "Portal" : portal.Name;
+                string label = string.IsNullOrEmpty(portal.Name) ? "Portal" : portal.Name.RemoveRichTextTags();
                 if (portal.Visibility == PortalVisibility.Private) label += " (private)";
 
                 // save: false keeps these out of the character's saved map data.
