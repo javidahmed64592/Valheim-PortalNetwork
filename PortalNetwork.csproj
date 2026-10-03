@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
     <AssemblyName>PortalNetwork</AssemblyName>
-    <Description>Teleport to any portal through a map interface without tag linking.</Description>
+    <Description>Teleport to any portal through a map interface without tag linking. Builders choose whether a portal is public or private.</Description>
     <Version>0.1.0</Version>
     <LangVersion>latest</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>

@@ -1,6 +1,6 @@
 {
   "name": "PortalNetwork",
-  "description": "Teleport to any portal through a map interface without tag linking.",
+  "description": "Teleport to any portal through a map interface without tag linking. Builders choose whether a portal is public or private.",
   "version_number": "0.1.0",
   "dependencies": [
     "denikson-BepInExPack_Valheim-5.4.2351",
