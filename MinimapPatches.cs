@@ -27,4 +27,14 @@ namespace PortalNetwork
             }
         }
     }
+
+    // Every frame: let the picker decide whether the player has walked away.
+    [HarmonyPatch(typeof(Minimap), "Update")]
+    internal static class Minimap_Update_Patch
+    {
+        private static void Postfix()
+        {
+            PortalMapPicker.Tick();
+        }
+    }
 }
