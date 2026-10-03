@@ -47,7 +47,7 @@ namespace PortalNetwork
             return result;
         }
 
-        private static PortalInfo ToInfo(ZDO zdo)
+        internal static PortalInfo ToInfo(ZDO zdo)
         {
             return new PortalInfo
             {
