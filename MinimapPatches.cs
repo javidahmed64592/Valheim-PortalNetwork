@@ -1,0 +1,30 @@
+using HarmonyLib;
+
+namespace PortalNetwork
+{
+    // While the portal picker is open, a left click picks a portal instead of toggling a pin.
+    [HarmonyPatch(typeof(Minimap), nameof(Minimap.OnMapLeftClick))]
+    internal static class Minimap_OnMapLeftClick_Patch
+    {
+        private static bool Prefix()
+        {
+            if (!PortalMapPicker.IsActive) return true;
+
+            PortalMapPicker.HandleClick();
+            return false; // skip vanilla
+        }
+    }
+
+    // Whenever the large map closes (M, Esc, or after picking), remove our pins.
+    [HarmonyPatch(typeof(Minimap), nameof(Minimap.SetMapMode))]
+    internal static class Minimap_SetMapMode_Patch
+    {
+        private static void Postfix(Minimap.MapMode mode)
+        {
+            if (mode != Minimap.MapMode.Large)
+            {
+                PortalMapPicker.Close();
+            }
+        }
+    }
+}

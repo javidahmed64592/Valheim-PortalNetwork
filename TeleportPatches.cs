@@ -14,7 +14,7 @@ namespace PortalNetwork
 
             if (!PortalNetworkClient.CanUsePortals(player, __instance)) return false;
 
-            PortalNetworkClient.RequestPortalList(zdo.m_uid, player);
+            PortalNetworkClient.RequestPortalList(zdo.m_uid, zdo.GetPosition(), player);
             return false;
         }
     }

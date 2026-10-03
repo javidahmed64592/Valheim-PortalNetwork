@@ -9,6 +9,7 @@ namespace PortalNetwork
         private const float RequestCooldownSeconds = 1f;
 
         private static ZDOID _enteredPortal = ZDOID.None;
+        private static Vector3 _enteredPosition;
         private static float _lastRequestTime = -10f;
 
         /// <summary>Same restrictions vanilla applies in TeleportWorld.Teleport.</summary>
@@ -37,37 +38,22 @@ namespace PortalNetwork
             return true;
         }
 
-        internal static void RequestPortalList(ZDOID enteredPortal, Player player)
+        internal static void RequestPortalList(ZDOID enteredPortal, Vector3 enteredPosition, Player player)
         {
             if (Time.unscaledTime - _lastRequestTime < RequestCooldownSeconds) return;
             _lastRequestTime = Time.unscaledTime;
 
             _enteredPortal = enteredPortal;
+            _enteredPosition = enteredPosition;
             PortalNetworkRpc.SendListRequest(player.GetPlayerID());
         }
 
         internal static void OnPortalListReceived(List<PortalInfo> portals)
         {
-            Player player = Player.m_localPlayer;
-            if (player == null) return;
+            if (Player.m_localPlayer == null) return;
 
             PortalNetworkPlugin.Log.LogInfo($"Client: received {portals.Count} portal(s)");
-            foreach (PortalInfo p in portals)
-            {
-                PortalNetworkPlugin.Log.LogInfo($"  '{p.Name}' at {p.Position} ({p.Visibility})");
-            }
-
-            // TEMPORARY test behaviour: jump to the next portal in the list, cycling.
-            // The map UI replaces this in the next step.
-            if (portals.Count < 2)
-            {
-                player.Message(MessageHud.MessageType.Center, "No other portals available");
-                return;
-            }
-
-            int current = portals.FindIndex(p => p.Id == _enteredPortal);
-            PortalInfo destination = portals[(current + 1) % portals.Count];
-            TeleportTo(player, destination);
+            PortalMapPicker.Open(portals, _enteredPortal, _enteredPosition);
         }
 
         internal static void TeleportTo(Player player, PortalInfo destination)
