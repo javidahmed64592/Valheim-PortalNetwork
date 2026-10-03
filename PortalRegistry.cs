@@ -35,20 +35,23 @@ namespace PortalNetwork
             return zdo != null && Game.instance.PortalPrefabHash.Contains(zdo.GetPrefab());
         }
 
-        internal static bool IsVisibleTo(PortalInfo info, long playerId)
+        internal static bool IsVisibleTo(PortalInfo info, Requester who)
         {
-            return info.Visibility == PortalVisibility.Public
-                || (playerId != 0L && info.OwnerId == playerId);
+            return who.IsAdmin
+                || info.Visibility == PortalVisibility.Public
+                || (who.PlayerId != 0L && info.OwnerId == who.PlayerId);
         }
 
-        /// <summary>The builder may change it. Portals with no recorded builder are open to anyone.</summary>
-        internal static bool CanChange(PortalInfo info, long playerId)
+        /// <summary>The builder or an admin may change it. Portals with no recorded builder are open to anyone.</summary>
+        internal static bool CanChange(PortalInfo info, Requester who)
         {
-            return info.OwnerId == 0L || (playerId != 0L && info.OwnerId == playerId);
+            return who.IsAdmin
+                || info.OwnerId == 0L
+                || (who.PlayerId != 0L && info.OwnerId == who.PlayerId);
         }
 
         /// <summary>Only meaningful on the server, where ZDOMan holds every portal in the world.</summary>
-        internal static List<PortalInfo> GetVisibleTo(long playerId)
+        internal static List<PortalInfo> GetVisibleTo(Requester who)
         {
             var result = new List<PortalInfo>();
             if (ZDOMan.instance == null) return result;
@@ -56,7 +59,7 @@ namespace PortalNetwork
             foreach (ZDO zdo in ZDOMan.instance.GetPortalList())
             {
                 PortalInfo info = ToInfo(zdo);
-                if (IsVisibleTo(info, playerId))
+                if (IsVisibleTo(info, who))
                 {
                     result.Add(info);
                 }

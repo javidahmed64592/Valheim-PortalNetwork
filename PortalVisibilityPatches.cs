@@ -57,6 +57,7 @@ namespace PortalNetwork
     }
 
     // Append the current visibility (and the toggle hint, for the builder) to the hover text.
+    // Append the current visibility (and the toggle hint, for whoever may change it) to the hover text.
     [HarmonyPatch(typeof(TeleportWorld), nameof(TeleportWorld.GetHoverText))]
     internal static class TeleportWorld_GetHoverText_Patch
     {
@@ -67,16 +68,23 @@ namespace PortalNetwork
             if (zdo == null) return;
 
             PortalInfo info = PortalRegistry.ToInfo(zdo);
-            string text = "\nVisibility: " + (info.Visibility == PortalVisibility.Public ? "Public" : "Private");
+            string state = info.Visibility == PortalVisibility.Public
+                ? "$portalnetwork_visibility_public"
+                : "$portalnetwork_visibility_private";
+            string text = "\n$portalnetwork_visibility: " + state;
 
             // Cosmetic only: the server makes the real decision when the toggle is pressed.
             Player local = Player.m_localPlayer;
-            if (local != null && PortalRegistry.CanChange(info, local.GetPlayerID()))
+            if (local != null)
             {
-                text += "\n[<color=yellow><b>Shift + Use</b></color>] Toggle visibility";
+                var who = new Requester(local.GetPlayerID(), ZNet.instance.LocalPlayerIsAdminOrHost());
+                if (PortalRegistry.CanChange(info, who))
+                {
+                    text += "\n[<color=yellow><b>Shift + $KEY_Use</b></color>] $portalnetwork_toggle_hint";
+                }
             }
 
-            __result += text;
+            __result += PortalNetworkLocalization.Localize(text);
         }
     }
 }

@@ -21,6 +21,7 @@ namespace PortalNetwork
         private void Awake()
         {
             Log = Logger;
+            PortalNetworkLocalization.Register();
             PortalNetworkRpc.Register();
             _harmony = new Harmony(PluginGuid);
             _harmony.PatchAll();

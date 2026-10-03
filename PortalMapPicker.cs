@@ -31,7 +31,10 @@ namespace PortalNetwork
                 if (portal.Id == enteredPortal) continue; // no point listing the portal you are standing at
 
                 string label = PortalNames.Display(portal);
-                if (portal.Visibility == PortalVisibility.Private) label += " (private)";
+                if (portal.Visibility == PortalVisibility.Private)
+                {
+                    label += " (" + PortalNetworkLocalization.Localize("$portalnetwork_private_suffix") + ")";
+                }
 
                 // save: false keeps these out of the character's saved map data.
                 Minimap.PinData pin = minimap.AddPin(portal.Position, Minimap.PinType.Icon4, label, false, false);
@@ -42,7 +45,7 @@ namespace PortalNetwork
             {
                 if (Player.m_localPlayer != null)
                 {
-                    Player.m_localPlayer.Message(MessageHud.MessageType.Center, "No other portals available");
+                    Player.m_localPlayer.Message(MessageHud.MessageType.Center, "$portalnetwork_no_other_portals");
                 }
                 return;
             }

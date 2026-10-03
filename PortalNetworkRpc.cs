@@ -67,14 +67,14 @@ namespace PortalNetwork
         {
             if (package.ReadInt() != ProtocolVersion)
             {
-                SendNotice(sender, "PortalNetwork version mismatch between server and client");
+                SendNotice(sender, "$portalnetwork_version_mismatch");
                 yield break;
             }
 
-            long playerId = PlayerIdentity.ResolvePlayerId(sender);
-            List<PortalInfo> visible = PortalRegistry.GetVisibleTo(playerId);
-            PortalNetworkPlugin.Log.LogInfo(
-                $"Server: peer {sender} is player {playerId}; sending {visible.Count} portal(s)");
+            Requester who = PlayerIdentity.Resolve(sender);
+            List<PortalInfo> visible = PortalRegistry.GetVisibleTo(who);
+            PortalNetworkPlugin.Log.LogDebug(
+                $"Server: peer {sender} is player {who.PlayerId} (admin: {who.IsAdmin}); sending {visible.Count} portal(s)");
 
             var response = new ZPackage();
             response.Write(visible.Count);
@@ -88,12 +88,12 @@ namespace PortalNetwork
         private static IEnumerator OnTeleportRequest(long sender, ZPackage package)
         {
             ZDOID portalId = package.ReadZDOID();
-            long playerId = PlayerIdentity.ResolvePlayerId(sender);
+            Requester who = PlayerIdentity.Resolve(sender);
 
             var response = new ZPackage();
             ZDO zdo;
             if (PortalRegistry.TryGetPortal(portalId, out zdo)
-                && PortalRegistry.IsVisibleTo(PortalRegistry.ToInfo(zdo), playerId))
+                && PortalRegistry.IsVisibleTo(PortalRegistry.ToInfo(zdo), who))
             {
                 PortalInfo portal = PortalRegistry.ToInfo(zdo);
                 response.Write(true);
@@ -113,19 +113,19 @@ namespace PortalNetwork
         {
             ZDOID portalId = package.ReadZDOID();
             int value = package.ReadInt();
-            long playerId = PlayerIdentity.ResolvePlayerId(sender);
+            Requester who = PlayerIdentity.Resolve(sender);
 
             ZDO zdo;
             if (!Enum.IsDefined(typeof(PortalVisibility), value) || !PortalRegistry.TryGetPortal(portalId, out zdo))
             {
-                SendNotice(sender, "That portal no longer exists");
+                SendNotice(sender, "$portalnetwork_portal_missing");
                 yield break;
             }
 
             PortalInfo portal = PortalRegistry.ToInfo(zdo);
-            if (!PortalRegistry.CanChange(portal, playerId))
+            if (!PortalRegistry.CanChange(portal, who))
             {
-                SendNotice(sender, "Only the builder can change who sees this portal");
+                SendNotice(sender, "$portalnetwork_only_builder");
                 yield break;
             }
 
@@ -133,20 +133,20 @@ namespace PortalNetwork
             long owner = zdo.GetOwner();
             if (owner == 0L)
             {
-                SendNotice(sender, "Move closer to the portal and try again");
+                SendNotice(sender, "$portalnetwork_move_closer");
                 yield break;
             }
 
             ZRoutedRpc.instance.InvokeRoutedRPC(owner, zdo.m_uid, PortalOwnership.SetVisibilityRpc, value);
             SendNotice(sender, value == (int)PortalVisibility.Public
-                ? "Portal visible to everyone"
-                : "Portal visible only to you");
+                ? "$portalnetwork_now_public"
+                : "$portalnetwork_now_private");
         }
 
-        private static void SendNotice(long peer, string text)
+        private static void SendNotice(long peer, string textOrToken)
         {
             var package = new ZPackage();
-            package.Write(text);
+            package.Write(textOrToken);
             _notice.SendPackage(peer, package);
         }
 
@@ -168,7 +168,7 @@ namespace PortalNetwork
         {
             if (!package.ReadBool())
             {
-                PortalNetworkClient.ShowMessage("That portal is no longer available");
+                PortalNetworkClient.ShowMessage("$portalnetwork_portal_unavailable");
                 yield break;
             }
 
