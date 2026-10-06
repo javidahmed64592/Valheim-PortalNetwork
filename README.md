@@ -10,7 +10,7 @@ Builders choose whether each portal is visible to everyone or only to them. Ever
 
 1. **Build portals** as normal. Press **Use** on a portal to give it a name. Names are what you see on the map.
 2. **Walk into a portal.** The large map opens with a pin on every portal you can use.
-3. **Click a pin** to teleport there. To stay where you are, close the map (M or Esc). The map also closes automatically if you move more than 2 metre away from the portal.
+3. **Click a pin** to teleport there. To stay where you are, close the map (M or Esc). The map also closes automatically if you move more than 2 metres away from the portal.
 
 ### Public and private portals
 

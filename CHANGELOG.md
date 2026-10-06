@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- The map UI now only closes when moving more than 2 metre from the portal.
+- The map UI now only closes when moving more than 2 metres from the portal.
 
 ## 0.1.0
 
