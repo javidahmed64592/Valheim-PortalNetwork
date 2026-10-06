@@ -13,7 +13,7 @@ namespace PortalNetwork
     {
         public const string PluginGuid = "javidahmed64592.portalnetwork";
         public const string PluginName = "PortalNetwork";
-        public const string PluginVersion = "0.1.0";
+        public const string PluginVersion = "0.1.1";
 
         internal static ManualLogSource Log;
         private Harmony _harmony;
