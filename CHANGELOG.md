@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- The map UI now only closes when moving more than 2 metres from the portal.
+
 ## 0.1.0
 
 - **Portal map.** Walking into any portal opens the large map with a pin on every portal you can use. Click a pin to teleport there. No tag matching or pairing needed.
