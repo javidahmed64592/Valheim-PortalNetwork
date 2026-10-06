@@ -40,6 +40,7 @@ namespace PortalNetwork
 
                 // save: false keeps these out of the character's saved map data.
                 Minimap.PinData pin = minimap.AddPin(portal.Position, Minimap.PinType.Icon4, label, false, false);
+                pin.m_doubleSize = true;
                 Entries.Add(new Entry { Pin = pin, Portal = portal });
             }
 
@@ -117,6 +118,14 @@ namespace PortalNetwork
                 || Vector3.Distance(player.transform.position, _origin) > MaxDistanceFromPortal)
             {
                 CloseMap();
+                return;
+            }
+
+            // UpdatePins resets color to white each frame; re-apply red tint here.
+            foreach (Entry entry in Entries)
+            {
+                if (entry.Pin.m_iconElement != null)
+                    entry.Pin.m_iconElement.color = Color.red;
             }
         }
 
