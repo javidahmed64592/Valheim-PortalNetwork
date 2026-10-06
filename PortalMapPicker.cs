@@ -12,9 +12,8 @@ namespace PortalNetwork
         }
 
         private const float MinClickRadiusPixels = 24f;
-        private const float MaxDistanceFromPortal = 6f;
+        private const float MaxDistanceFromPortal = 2f;
         private static Vector3 _origin;
-        private static bool _armed;
         private static readonly List<Entry> Entries = new List<Entry>();
 
         internal static bool IsActive
@@ -54,7 +53,6 @@ namespace PortalNetwork
             }
 
             _origin = enteredPosition;
-            _armed = false; // only start watching once movement keys have been released
 
             minimap.ShowPointOnMap(enteredPosition);
             if (!Minimap.IsOpen())
@@ -119,16 +117,6 @@ namespace PortalNetwork
                 || Vector3.Distance(player.transform.position, _origin) > MaxDistanceFromPortal)
             {
                 CloseMap();
-                return;
-            }
-
-            if (!HasMovementInput())
-            {
-                _armed = true;
-            }
-            else if (_armed)
-            {
-                CloseMap();
             }
         }
 
@@ -136,18 +124,6 @@ namespace PortalNetwork
         {
             // The SetMapMode patch clears our pins when the large map closes.
             Minimap.instance.SetMapMode(Minimap.MapMode.Small);
-        }
-
-        private static bool HasMovementInput()
-        {
-            // Typing in chat or naming a pin must not count as walking.
-            if (Chat.instance != null && Chat.instance.HasFocus()) return false;
-            if (Minimap.InTextInput()) return false;
-
-            return ZInput.GetButton("Forward")
-                || ZInput.GetButton("Backward")
-                || ZInput.GetButton("Left")
-                || ZInput.GetButton("Right");
         }
     }
 }
