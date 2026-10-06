@@ -3,6 +3,7 @@
 ## Unreleased
 
 - The map UI now only closes when moving more than 2 metres from the portal.
+- The portal icons are now red and bigger on the map, making them easier to see.
 
 ## 0.1.0
 
