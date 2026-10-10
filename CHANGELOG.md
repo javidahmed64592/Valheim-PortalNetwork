@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.2
+
+- Press **P** while the map is open to show or hide portal icons on it, so you can see where portals are relative to other landmarks.
+- The key is configurable (`Map` > `TogglePortalIcons` in the config file).
+
 ## 0.1.1
 
 - The map UI now only closes when moving more than 2 metres from the portal.
