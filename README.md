@@ -12,6 +12,11 @@ Builders choose whether each portal is visible to everyone or only to them. Ever
 2. **Walk into a portal.** The large map opens with a pin on every portal you can use.
 3. **Click a pin** to teleport there. To stay where you are, close the map (M or Esc). The map also closes automatically if you move more than 2 metres away from the portal.
 
+### Showing portals on the map
+
+Open the map normally (M) and press **P** (configurable) to show or hide an icon for every portal you can use.
+The icons are for reference only; to teleport, walk into a portal.
+
 ### Public and private portals
 
 Every portal is **public** by default, so everyone can see and use it.
