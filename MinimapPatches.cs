@@ -24,6 +24,7 @@ namespace PortalNetwork
             if (mode != Minimap.MapMode.Large)
             {
                 PortalMapPicker.Close();
+                PortalMapOverlay.Clear();
             }
         }
     }
@@ -35,6 +36,7 @@ namespace PortalNetwork
         private static void Postfix()
         {
             PortalMapPicker.Tick();
+            PortalMapOverlay.Tick();
         }
     }
 }
