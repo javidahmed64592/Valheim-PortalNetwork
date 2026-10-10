@@ -27,6 +27,7 @@ namespace PortalNetwork
             if (minimap == null) return;
 
             Close(); // clear anything left over from a previous open
+            PortalMapOverlay.Clear();
 
             foreach (PortalInfo portal in portals)
             {

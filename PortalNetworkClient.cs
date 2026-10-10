@@ -12,6 +12,9 @@ namespace PortalNetwork
         private static Vector3 _enteredPosition;
         private static float _lastRequestTime = -10f;
 
+        // One entry per outstanding list request (true = map overlay, false = portal picker), oldest first.
+        private static readonly Queue<bool> PendingRequests = new Queue<bool>();
+
         /// <summary>Same restrictions vanilla applies in TeleportWorld.Teleport.</summary>
         internal static bool CanUsePortals(Player player, TeleportWorld portal)
         {
@@ -45,14 +48,27 @@ namespace PortalNetwork
 
             _enteredPortal = enteredPortal;
             _enteredPosition = enteredPosition;
+            PendingRequests.Enqueue(false);
+            PortalNetworkRpc.SendListRequest();
+        }
+
+        internal static void RequestOverlayList()
+        {
+            PendingRequests.Enqueue(true);
             PortalNetworkRpc.SendListRequest();
         }
 
         internal static void OnPortalListReceived(List<PortalInfo> portals)
         {
+            bool forOverlay = PendingRequests.Count > 0 && PendingRequests.Dequeue();
             if (Player.m_localPlayer == null) return;
 
             PortalNetworkPlugin.Log.LogDebug($"Client: received {portals.Count} portal(s)");
+            if (forOverlay)
+            {
+                PortalMapOverlay.Show(portals);
+                return;
+            }
             PortalMapPicker.Open(portals, _enteredPortal, _enteredPosition);
         }
 
