@@ -15,7 +15,7 @@ Builders choose whether each portal is visible to everyone or only to them. Ever
 ### Showing portals on the map
 
 Open the map normally (M) and press **P** (configurable) to show or hide an icon for every portal you can use.
-The icons are for reference only; to teleport, walk into a portal.
+The key is listed in the map's key hints. The icons are for reference only; to teleport, walk into a portal.
 
 ### Public and private portals
 

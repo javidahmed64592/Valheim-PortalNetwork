@@ -15,7 +15,7 @@ namespace PortalNetwork
     {
         public const string PluginGuid = "javidahmed64592.portalnetwork";
         public const string PluginName = "PortalNetwork";
-        public const string PluginVersion = "0.1.2";
+        public const string PluginVersion = "0.2.0";
 
         internal static ManualLogSource Log;
         internal static ConfigEntry<KeyboardShortcut> ToggleKey;

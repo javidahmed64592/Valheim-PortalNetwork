@@ -15,6 +15,7 @@ namespace PortalNetwork
                 { "portalnetwork_visibility_private", "Private" },
                 { "portalnetwork_private_suffix", "private" },
                 { "portalnetwork_toggle_hint", "Toggle visibility" },
+                { "portalnetwork_toggle_icons_hint", "Toggle portals" },
                 { "portalnetwork_no_other_portals", "No other portals available" },
                 { "portalnetwork_portal_unavailable", "That portal is no longer available" },
                 { "portalnetwork_portal_missing", "That portal no longer exists" },

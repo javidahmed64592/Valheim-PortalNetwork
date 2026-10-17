@@ -37,6 +37,7 @@ namespace PortalNetwork
         {
             PortalMapPicker.Tick();
             PortalMapOverlay.Tick();
+            PortalKeyHint.Tick();
         }
     }
 }
