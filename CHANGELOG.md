@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.0
+
+- The large map's key hints now include a "Toggle portals" entry for the portal icon key, drawn like the vanilla hints and updated if you rebind the key. It is hidden while the portal picker is open.
+
 ## 0.1.2
 
 - Press **P** while the map is open to show or hide portal icons on it, so you can see where portals are relative to other landmarks.
