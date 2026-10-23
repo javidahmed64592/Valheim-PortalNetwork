@@ -16,15 +16,13 @@ namespace PortalNetwork
         /// <summary>Called every frame (from the Minimap.Update patch).</summary>
         internal static void Tick()
         {
-            if (!Minimap.IsOpen()) return; // pins are cleared when the map closes
-
             if (PortalMapPicker.IsActive)
             {
                 Clear(); // the picker has its own pins
                 return;
             }
 
-            if (!Minimap.InTextInput() && PortalNetworkPlugin.ToggleKey.Value.IsDown())
+            if (Minimap.IsOpen() && !Minimap.InTextInput() && PortalNetworkPlugin.ToggleKey.Value.IsDown())
             {
                 _enabled = !_enabled;
                 if (!_enabled) Clear();
@@ -36,7 +34,7 @@ namespace PortalNetwork
                 PortalNetworkClient.RequestOverlayList();
             }
 
-            // UpdatePins resets color to white each frame; re-apply red tint here.
+            // UpdatePins resets color to white each frame (on the minimap too); re-apply red tint here.
             foreach (Minimap.PinData pin in Pins)
             {
                 if (pin.m_iconElement != null)
@@ -49,7 +47,7 @@ namespace PortalNetwork
             _requestPending = false;
 
             Minimap minimap = Minimap.instance;
-            if (minimap == null || !Minimap.IsOpen() || !_enabled || PortalMapPicker.IsActive) return;
+            if (minimap == null || !_enabled || PortalMapPicker.IsActive) return;
 
             Clear();
             _loaded = true;
