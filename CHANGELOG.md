@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+
+- The portal icons now stay on the minimap and remain red after closing the map interface and walking.
+
 ## 0.2.0
 
 - The large map's key hints now include a "Toggle portals" entry for the portal icon key, drawn like the vanilla hints and updated if you rebind the key. It is hidden while the portal picker is open.

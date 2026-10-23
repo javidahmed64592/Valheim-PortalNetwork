@@ -15,7 +15,7 @@ namespace PortalNetwork
         }
     }
 
-    // Whenever the large map closes (M, Esc, or after picking), remove our pins.
+    // Whenever the large map closes (M, Esc, or after picking), remove the picker's pins.
     [HarmonyPatch(typeof(Minimap), nameof(Minimap.SetMapMode))]
     internal static class Minimap_SetMapMode_Patch
     {
@@ -23,8 +23,7 @@ namespace PortalNetwork
         {
             if (mode != Minimap.MapMode.Large)
             {
-                PortalMapPicker.Close();
-                PortalMapOverlay.Clear();
+                PortalMapPicker.Close(); // overlay pins stay so they remain on the minimap
             }
         }
     }
