@@ -1,90 +1,121 @@
 using System;
+
 using HarmonyLib;
 
-namespace PortalNetwork
+namespace PortalNetwork;
+
+internal static class PortalOwnership
 {
-    internal static class PortalOwnership
-    {
-        internal const string SetVisibilityRpc = "RPC_PortalNetwork_SetVisibility";
-    }
+    internal const string SetVisibilityRpc = "RPC_PortalNetwork_SetVisibility";
+}
 
-    // Register our RPC on every placed portal. Same pattern vanilla uses for RPC_SetTag.
-    [HarmonyPatch(typeof(TeleportWorld), "Awake")]
-    internal static class TeleportWorld_Awake_Patch
+/// <summary>
+/// Register our RPC on every placed portal. Same pattern vanilla uses for RPC_SetTag.
+/// </summary>
+[HarmonyPatch(typeof(TeleportWorld), "Awake")]
+internal static class TeleportWorld_Awake_Patch
+{
+    private static void Postfix(TeleportWorld __instance)
     {
-        private static void Postfix(TeleportWorld __instance)
+        ZNetView nview = __instance.GetComponent<ZNetView>();
+        if (nview == null || nview.GetZDO() == null)
         {
-            ZNetView nview = __instance.GetComponent<ZNetView>();
-            if (nview == null || nview.GetZDO() == null) return; // placement ghost
-
-            nview.Register<int>(PortalOwnership.SetVisibilityRpc, (sender, value) => OnSetVisibility(nview, sender, value));
+            return; // placement ghost
         }
 
-        // Runs on the ZDO's owner. It only accepts instructions that came from the server,
-        // which has already checked that the requesting player is allowed to make the change.
-        private static void OnSetVisibility(ZNetView nview, long sender, int value)
-        {
-            if (sender != ZRoutedRpc.instance.GetServerPeerID()) return;
-            if (!nview.IsValid() || !nview.IsOwner()) return;
-            if (!Enum.IsDefined(typeof(PortalVisibility), value)) return;
-
-            nview.GetZDO().Set(PortalRegistry.VisibilityHash, value);
-        }
+        nview.Register<int>(PortalOwnership.SetVisibilityRpc, (sender, value) => OnSetVisibility(nview, sender, value));
     }
 
-    // Shift + Use asks the server to toggle visibility; plain Use keeps vanilla's tag-naming behaviour.
-    [HarmonyPatch(typeof(TeleportWorld), nameof(TeleportWorld.Interact))]
-    internal static class TeleportWorld_Interact_Patch
+    /// <summary>
+    /// Runs on the ZDO's owner. It only accepts instructions that came from the server,
+    /// which has already checked that the requesting player is allowed to make the change.
+    /// </summary>
+    private static void OnSetVisibility(ZNetView nview, long sender, int value)
     {
-        private static bool Prefix(TeleportWorld __instance, Humanoid human, bool hold, bool alt, ref bool __result)
+        if (sender != ZRoutedRpc.instance.GetServerPeerID())
         {
-            if (!alt || hold) return true;
-
-            ZNetView nview = __instance.GetComponent<ZNetView>();
-            ZDO zdo = nview != null ? nview.GetZDO() : null;
-            if (zdo == null || !(human is Player)) return true;
-
-            __result = true;
-            PortalInfo info = PortalRegistry.ToInfo(zdo);
-            PortalVisibility next = info.Visibility == PortalVisibility.Public
-                ? PortalVisibility.Private
-                : PortalVisibility.Public;
-
-            // The server decides, and tells the player the outcome.
-            PortalNetworkRpc.SendVisibilityRequest(zdo.m_uid, next);
-            return false;
+            return;
         }
-    }
 
-    // Append the current visibility (and the toggle hint, for the builder) to the hover text.
-    // Append the current visibility (and the toggle hint, for whoever may change it) to the hover text.
-    [HarmonyPatch(typeof(TeleportWorld), nameof(TeleportWorld.GetHoverText))]
-    internal static class TeleportWorld_GetHoverText_Patch
-    {
-        private static void Postfix(TeleportWorld __instance, ref string __result)
+        if (!nview.IsValid() || !nview.IsOwner())
         {
-            ZNetView nview = __instance.GetComponent<ZNetView>();
-            ZDO zdo = nview != null ? nview.GetZDO() : null;
-            if (zdo == null) return;
+            return;
+        }
 
-            PortalInfo info = PortalRegistry.ToInfo(zdo);
-            string state = info.Visibility == PortalVisibility.Public
-                ? "$portalnetwork_visibility_public"
-                : "$portalnetwork_visibility_private";
-            string text = "\n$portalnetwork_visibility: " + state;
+        if (!Enum.IsDefined(typeof(PortalVisibility), value))
+        {
+            return;
+        }
 
-            // Cosmetic only: the server makes the real decision when the toggle is pressed.
-            Player local = Player.m_localPlayer;
-            if (local != null)
+        nview.GetZDO().Set(PortalRegistry.VisibilityHash, value);
+    }
+}
+
+/// <summary>
+/// Shift + Use asks the server to toggle visibility; plain Use keeps vanilla's tag-naming behaviour.
+/// </summary>
+[HarmonyPatch(typeof(TeleportWorld), nameof(TeleportWorld.Interact))]
+internal static class TeleportWorld_Interact_Patch
+{
+    private static bool Prefix(TeleportWorld __instance, Humanoid human, bool hold, bool alt, ref bool __result)
+    {
+        if (!alt || hold)
+        {
+            return true;
+        }
+
+        ZNetView nview = __instance.GetComponent<ZNetView>();
+        ZDO zdo = nview != null ? nview.GetZDO() : null;
+        if (zdo == null || human is not Player)
+        {
+            return true;
+        }
+
+        __result = true;
+        PortalInfo info = PortalRegistry.ToInfo(zdo);
+        PortalVisibility next = info.Visibility == PortalVisibility.Public
+            ? PortalVisibility.Private
+            : PortalVisibility.Public;
+
+        // The server decides, and tells the player the outcome.
+        PortalNetworkRpc.SendVisibilityRequest(zdo.m_uid, next);
+        return false;
+    }
+}
+
+/// <summary>
+/// Append the current visibility (and the toggle hint, for the builder) to the hover text.
+/// Append the current visibility (and the toggle hint, for whoever may change it) to the hover text.
+/// </summary>
+[HarmonyPatch(typeof(TeleportWorld), nameof(TeleportWorld.GetHoverText))]
+internal static class TeleportWorld_GetHoverText_Patch
+{
+    private static void Postfix(TeleportWorld __instance, ref string __result)
+    {
+        ZNetView nview = __instance.GetComponent<ZNetView>();
+        ZDO zdo = nview != null ? nview.GetZDO() : null;
+        if (zdo == null)
+        {
+            return;
+        }
+
+        PortalInfo info = PortalRegistry.ToInfo(zdo);
+        string state = info.Visibility == PortalVisibility.Public
+            ? "$portalnetwork_visibility_public"
+            : "$portalnetwork_visibility_private";
+        string text = "\n$portalnetwork_visibility: " + state;
+
+        // Cosmetic only: the server makes the real decision when the toggle is pressed.
+        Player local = Player.m_localPlayer;
+        if (local != null)
+        {
+            Requester who = new(local.GetPlayerID(), ZNet.instance.LocalPlayerIsAdminOrHost());
+            if (PortalRegistry.CanChange(info, who))
             {
-                var who = new Requester(local.GetPlayerID(), ZNet.instance.LocalPlayerIsAdminOrHost());
-                if (PortalRegistry.CanChange(info, who))
-                {
-                    text += "\n[<color=yellow><b>Shift + $KEY_Use</b></color>] $portalnetwork_toggle_hint";
-                }
+                text += "\n[<color=yellow><b>Shift + $KEY_Use</b></color>] $portalnetwork_toggle_hint";
             }
-
-            __result += PortalNetworkLocalization.Localize(text);
         }
+
+        __result += PortalNetworkLocalization.Localize(text);
     }
 }
