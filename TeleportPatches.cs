@@ -1,21 +1,28 @@
 using HarmonyLib;
 
-namespace PortalNetwork
+namespace PortalNetwork;
+
+[HarmonyPatch(typeof(TeleportWorld), nameof(TeleportWorld.Teleport))]
+internal static class TeleportWorld_Teleport_Patch
 {
-    [HarmonyPatch(typeof(TeleportWorld), nameof(TeleportWorld.Teleport))]
-    internal static class TeleportWorld_Teleport_Patch
+    /// <summary>
+    /// Returning false skips vanilla's tag-linked teleport entirely.
+    /// </summary>
+    private static bool Prefix(TeleportWorld __instance, Player player)
     {
-        // Returning false skips vanilla's tag-linked teleport entirely.
-        private static bool Prefix(TeleportWorld __instance, Player player)
+        ZNetView nview = __instance.GetComponent<ZNetView>();
+        ZDO zdo = nview != null ? nview.GetZDO() : null;
+        if (zdo == null)
         {
-            ZNetView nview = __instance.GetComponent<ZNetView>();
-            ZDO zdo = nview != null ? nview.GetZDO() : null;
-            if (zdo == null) return true;
+            return true;
+        }
 
-            if (!PortalNetworkClient.CanUsePortals(player, __instance)) return false;
-
-            PortalNetworkClient.RequestPortalList(zdo.m_uid, zdo.GetPosition(), player);
+        if (!PortalNetworkClient.CanUsePortals(player, __instance))
+        {
             return false;
         }
+
+        PortalNetworkClient.RequestPortalList(zdo.m_uid, zdo.GetPosition());
+        return false;
     }
 }

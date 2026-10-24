@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Added an `.editorconfig`, `Directory.Build.props` and a CI workflow that runs `dotnet format` and a Release build.
+- Reformatted the code to match the new code style rules and fixed the analyzer warnings (no behaviour change).
+
 ## 0.2.1
 
 - The portal icons now stay on the minimap and remain red after closing the map interface and walking.
