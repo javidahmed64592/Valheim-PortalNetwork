@@ -4,6 +4,8 @@
 
 - Added an `.editorconfig`, `Directory.Build.props` and a CI workflow that runs `dotnet format` and a Release build.
 - Reformatted the code to match the new code style rules and fixed the analyzer warnings (no behaviour change).
+- Tidied up packaging scripts and workflow files.
+- Updated README and icon.
 
 ## 0.2.1
 
