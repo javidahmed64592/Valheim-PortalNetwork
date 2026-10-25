@@ -18,7 +18,7 @@ public class PortalNetworkPlugin : BaseUnityPlugin
 {
     public const string PluginGuid = "javidahmed64592.portalnetwork";
     public const string PluginName = "PortalNetwork";
-    public const string PluginVersion = "0.2.1";
+    public const string PluginVersion = "0.3.0";
 
     internal static ManualLogSource _log;
     internal static ConfigEntry<KeyboardShortcut> _toggleKey;
