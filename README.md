@@ -1,3 +1,7 @@
+[![CI](https://img.shields.io/github/actions/workflow/status/javidahmed64592/valheim-portalnetwork/ci.yml?branch=main&style=flat-square&label=CI&logo=github)](https://github.com/javidahmed64592/valheim-portalnetwork/actions/workflows/ci.yml)
+[![Package](https://img.shields.io/github/actions/workflow/status/javidahmed64592/valheim-portalnetwork/package.yml?branch=main&style=flat-square&label=Package&logo=github)](https://github.com/javidahmed64592/valheim-portalnetwork/actions/workflows/package.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 # PortalNetwork
 
 Teleport to any portal through a map interface without tag linking.
@@ -37,3 +41,7 @@ Admins, and the host of a self-hosted world, can see every portal and change any
 ## Credits
 
 Inspired by [TargetPortal](https://thunderstore.io/c/valheim/p/Smoothbrain/TargetPortal/) by Smoothbrain.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/javidahmed64592/Valheim-PortalNetwork/blob/main/LICENSE) file for details.
