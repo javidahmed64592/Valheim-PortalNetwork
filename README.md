@@ -6,8 +6,6 @@
 
 Teleport to any portal through a map interface without tag linking.
 
-Builders choose whether each portal is visible to everyone or only to them. Everything is checked by the server, so it works on dedicated servers and friend-hosted worlds.
-
 ![PortalNetwork Example](https://github.com/javidahmed64592/Valheim-PortalNetwork/raw/main/images/game_screenshot_1.png)
 
 ## How to Use
@@ -18,8 +16,7 @@ Builders choose whether each portal is visible to everyone or only to them. Ever
 
 ### Showing Portals on the Map
 
-Open the map normally (M) and press **P** (configurable) to show or hide an icon for every portal you can use.
-The key is listed in the map's key hints. The icons are for reference only; to teleport, walk into a portal.
+Open the map normally and press **P** (configurable) to show or hide an icon for every portal you can use.
 
 ### Public and Private Portals
 
@@ -31,18 +28,9 @@ Every portal is **public** by default, so everyone can see and use it.
 
 Admins, and the host of a self-hosted world, can see every portal and change any portal's visibility.
 
-## Good to Know
-
-- **PortalNetwork must be installed on the server and on every player's game**, and versions must match. Players without it can't join a server that has it.
-- Vanilla teleport rules still apply: items that can't be teleported, boss events and world modifiers that block portals work exactly as before.
-- Portals that already exist in your world are public and work straight away.
-- If a portal is removed or made private while your map is open, you'll get a message instead of teleporting.
-
 ## Configuration
 
 Settings are in the BepInEx config file `javidahmed64592.portalnetwork.cfg`.
-- `TogglePortalIcons`: the key that shows or hides the portal icons on the map.
-- `PickerOtherIconOpacity`: how visible other map icons are while you choose a destination portal (default 0.4; 1 = unchanged, 0 = hidden).
 
 ## Credits
 
