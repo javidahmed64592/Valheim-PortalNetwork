@@ -16,6 +16,7 @@ internal static class PortalMapPicker
     private const float MaxDistanceFromPortal = 2f;
     private static Vector3 _origin;
     private static readonly List<Entry> Entries = [];
+    private static readonly HashSet<Minimap.PinData> PickerPins = [];
 
     internal static bool IsActive => Entries.Count > 0;
 
@@ -47,6 +48,7 @@ internal static class PortalMapPicker
             Minimap.PinData pin = minimap.AddPin(portal.Position, Minimap.PinType.Icon4, label, false, false);
             pin.m_doubleSize = true;
             Entries.Add(new Entry { Pin = pin, Portal = portal });
+            _ = PickerPins.Add(pin);
         }
 
         if (Entries.Count == 0)
@@ -119,6 +121,7 @@ internal static class PortalMapPicker
             }
         }
         Entries.Clear();
+        PickerPins.Clear(); // RemovePin triggers a vanilla pin refresh, which restores the dimmed pins' colours
     }
 
     /// <summary>Called every frame (from the Minimap.Update patch) while the picker is open.</summary>
@@ -138,14 +141,8 @@ internal static class PortalMapPicker
             return;
         }
 
-        // UpdatePins resets color to white each frame; re-apply red tint here.
-        foreach (Entry entry in Entries)
-        {
-            if (entry.Pin.m_iconElement != null)
-            {
-                entry.Pin.m_iconElement.color = Color.red;
-            }
-        }
+        PortalPinStyle.Apply(PickerPins);
+        PortalPinStyle.DimOthers(PickerPins, PortalNetworkPlugin._otherPinOpacity.Value);
     }
 
     private static void CloseMap()
