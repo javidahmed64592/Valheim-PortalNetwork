@@ -1,7 +1,5 @@
 using System.Collections.Generic;
 
-using UnityEngine;
-
 namespace PortalNetwork;
 
 /// <summary>
@@ -38,14 +36,8 @@ internal static class PortalMapOverlay
             PortalNetworkClient.RequestOverlayList();
         }
 
-        // UpdatePins resets color to white each frame (on the minimap too); re-apply red tint here.
-        foreach (Minimap.PinData pin in Pins)
-        {
-            if (pin.m_iconElement != null)
-            {
-                pin.m_iconElement.color = Color.red;
-            }
-        }
+        // Applies on both the minimap and the large map.
+        PortalPinStyle.Apply(Pins);
     }
 
     internal static void Show(List<PortalInfo> portals)

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.2
+
+- Portal icons are now always drawn in front of other map icons, on both the minimap and the portal map.
+- While choosing a destination portal, other map icons are faded so the portal icons stand out on crowded maps. The opacity can be changed with the new `PickerOtherIconOpacity` setting (default 0.4).
+
 ## 0.3.1
 
 - Updated the BepInExPack_Valheim dependency to 5.4.2360.

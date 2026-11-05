@@ -13,7 +13,7 @@ Builders choose whether each portal is visible to everyone or only to them. Ever
 ## How to Use
 
 1. **Build portals** as normal. Press **Use** on a portal to give it a name. Names are what you see on the map.
-2. **Walk into a portal.** The large map opens with a pin on every portal you can use.
+2. **Walk into a portal.** The large map opens with a pin on every portal you can use. Portal pins are drawn on top of all other map icons, and the other icons are faded so the portals stand out.
 3. **Click a pin** to teleport there. To stay where you are, close the map (M or Esc). The map also closes automatically if you move more than 2 metres away from the portal.
 
 ### Showing Portals on the Map
@@ -41,7 +41,8 @@ Admins, and the host of a self-hosted world, can see every portal and change any
 ## Configuration
 
 Settings are in the BepInEx config file `javidahmed64592.portalnetwork.cfg`.
-You can change the key that shows or hides the portal icons on the map.
+- `TogglePortalIcons`: the key that shows or hides the portal icons on the map.
+- `PickerOtherIconOpacity`: how visible other map icons are while you choose a destination portal (default 0.4; 1 = unchanged, 0 = hidden).
 
 ## Credits
 
