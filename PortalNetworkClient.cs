@@ -102,6 +102,8 @@ internal static class PortalNetworkClient
         Vector3 forward = rotation * Vector3.forward;
         Vector3 target = position + (forward * ExitDistance) + Vector3.up;
 
+        PortalFavourites.RecordTrip(_enteredPosition, position);
+
         PortalNetworkPlugin._log.LogDebug($"Teleporting to '{name}' at {position}");
         _ = player.TeleportTo(target, rotation, distantTeleport: true);
         Game.instance.IncrementPlayerStat(PlayerStatType.PortalsUsed);

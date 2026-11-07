@@ -36,6 +36,21 @@ internal static class Minimap_SetMapMode_Patch
 }
 
 /// <summary>
+/// While the pointer is over the portal list, the scroll wheel scrolls the list instead of zooming the map.
+/// </summary>
+[HarmonyPatch(typeof(Minimap), "UpdateMap")]
+internal static class Minimap_UpdateMap_Patch
+{
+    private static void Prefix(ref bool takeInput)
+    {
+        if (takeInput && PortalPickerPanel.IsPointerOver())
+        {
+            takeInput = false;
+        }
+    }
+}
+
+/// <summary>
 /// Every frame: let the picker decide whether the player has walked away.
 /// </summary>
 [HarmonyPatch(typeof(Minimap), "Update")]

@@ -67,6 +67,8 @@ internal static class PortalMapPicker
         {
             minimap.SetMapMode(Minimap.MapMode.Large);
         }
+
+        PortalPickerPanel.Show(portals, enteredPortal, enteredPosition);
     }
 
     /// <summary>Called from the Minimap.OnMapLeftClick patch while the picker is active.</summary>
@@ -100,13 +102,24 @@ internal static class PortalMapPicker
             return;
         }
 
-        PortalInfo destination = best.Portal;
+        Teleport(best.Portal);
+    }
+
+    /// <summary>Used by both the map pins and the portal list.</summary>
+    internal static void Teleport(PortalInfo destination)
+    {
+        if (!IsActive)
+        {
+            return;
+        }
+
         Minimap.instance.SetMapMode(Minimap.MapMode.Small); // closes the map; the patch clears our pins
         PortalNetworkClient.RequestTeleport(destination);
     }
 
     internal static void Close()
     {
+        PortalPickerPanel.Hide();
         if (Entries.Count == 0)
         {
             return;
