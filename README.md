@@ -16,9 +16,9 @@ Teleport to any portal through a map interface without tag linking.
 
 ### Portal List, Favourites and Going Back
 
-Alongside the map, a list shows every portal you can use, with its biome and distance, e.g. **Home (Plains)**. Click a name to teleport there.
+On the left of the map, a list shows every portal you can use, with its biome and distance, e.g. **Home (Plains)**. Click a name to teleport there. The portal you are standing at is always first, marked **You are here**.
 
-- Click the **star** next to a portal to make it a favourite. Favourites are listed first, and the **Favourites** tab shows only them.
+- Click the **star** next to a portal to make it a favourite. Favourites move to the top of the list, just below the portal you are at.
 - **Go back to ...** at the top takes you to your last destination. If you are already there, it takes you back to where you came from, so you can go back and forth between two portals when moving materials.
 - Favourites and your last trip are saved with your character, separately for each world.
 

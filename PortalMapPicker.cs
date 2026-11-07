@@ -68,12 +68,7 @@ internal static class PortalMapPicker
             minimap.SetMapMode(Minimap.MapMode.Large);
         }
 
-        List<PortalInfo> listed = [];
-        foreach (Entry entry in Entries)
-        {
-            listed.Add(entry.Portal);
-        }
-        PortalPickerPanel.Show(listed, enteredPosition);
+        PortalPickerPanel.Show(portals, enteredPortal, enteredPosition);
     }
 
     /// <summary>Called from the Minimap.OnMapLeftClick patch while the picker is active.</summary>

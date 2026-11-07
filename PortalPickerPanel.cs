@@ -10,15 +10,16 @@ using UnityEngine.UI;
 namespace PortalNetwork;
 
 /// <summary>
-/// A list of reachable portals shown on the right of the large map while the picker is open.
+/// A list of reachable portals shown on the left of the large map while the picker is open.
 /// Each row has a favourite star, the portal's name and biome (click to teleport) and its distance.
-/// Above the list: a "go back" button for the last trip, and All / Favourites tabs.
+/// The portal the player is standing at comes first (not clickable), then favourites, then the rest.
+/// Above the list: a "go back" button for the last trip.
 /// </summary>
 internal static class PortalPickerPanel
 {
     private const float PanelWidth = 380f;
     private const float PanelHeight = 600f;
-    private const float PanelMarginRight = 40f;
+    private const float PanelMarginLeft = 40f;
     private const float RowHeight = 34f;
     private const float StarSize = 26f;
     private const float DistanceWidth = 64f;
@@ -31,8 +32,6 @@ internal static class PortalPickerPanel
     private static GameObject _panel;
     private static Button _goBackButton;
     private static Text _goBackText;
-    private static Text _allTabText;
-    private static Text _favouritesTabText;
     private static RectTransform _content;
     private static ScrollRect _scroll;
     private static Text _emptyText;
@@ -41,6 +40,7 @@ internal static class PortalPickerPanel
     private static readonly List<PortalInfo> Portals = [];
     private static readonly List<GameObject> Rows = [];
     private static Vector3 _origin;
+    private static ZDOID _current;
 
     internal static bool IsPointerOver()
     {
@@ -49,7 +49,8 @@ internal static class PortalPickerPanel
             && RectTransformUtility.RectangleContainsScreenPoint((RectTransform)_panel.transform, ZInput.pointerPosition, null);
     }
 
-    internal static void Show(IEnumerable<PortalInfo> portals, Vector3 origin)
+    /// <summary>Fills the list; <paramref name="portals"/> includes the one at <paramref name="current"/>.</summary>
+    internal static void Show(IEnumerable<PortalInfo> portals, ZDOID current, Vector3 origin)
     {
         Minimap minimap = Minimap.instance;
         if (minimap == null || minimap.m_largeRoot == null)
@@ -65,6 +66,7 @@ internal static class PortalPickerPanel
         Portals.Clear();
         Portals.AddRange(portals);
         _origin = origin;
+        _current = current;
 
         _panel.transform.SetAsLastSibling(); // above the map image so it receives the clicks
         _panel.SetActive(true);
@@ -96,11 +98,11 @@ internal static class PortalPickerPanel
         _panel = gui.CreateWoodpanel(parent, Vector2.zero, Vector2.zero, Vector2.zero, 0f, 0f, false);
         _panel.name = "PortalNetwork_PortalList";
         RectTransform rect = (RectTransform)_panel.transform;
-        rect.anchorMin = new Vector2(1f, 0.5f);
-        rect.anchorMax = new Vector2(1f, 0.5f);
-        rect.pivot = new Vector2(1f, 0.5f);
+        rect.anchorMin = new Vector2(0f, 0.5f);
+        rect.anchorMax = new Vector2(0f, 0.5f);
+        rect.pivot = new Vector2(0f, 0.5f);
         rect.sizeDelta = new Vector2(PanelWidth, PanelHeight);
-        rect.anchoredPosition = new Vector2(-PanelMarginRight, 0f);
+        rect.anchoredPosition = new Vector2(PanelMarginLeft, 0f);
 
         VerticalLayoutGroup layout = _panel.AddComponent<VerticalLayoutGroup>();
         layout.padding = new RectOffset(Padding, Padding, Padding, Padding);
@@ -116,29 +118,8 @@ internal static class PortalPickerPanel
         _goBackText = goBack.GetComponentInChildren<Text>();
         _goBackText.horizontalOverflow = HorizontalWrapMode.Wrap;
 
-        GameObject tabs = new("Tabs", typeof(RectTransform));
-        tabs.transform.SetParent(_panel.transform, false);
-        HorizontalLayoutGroup tabLayout = tabs.AddComponent<HorizontalLayoutGroup>();
-        tabLayout.spacing = 8f;
-        SetControl(tabLayout, expandWidth: true);
-        AddLayout(tabs, height: 32f);
-        _allTabText = CreateTab(tabs.transform, "$portalnetwork_filter_all", false);
-        _favouritesTabText = CreateTab(tabs.transform, "$portalnetwork_filter_favourites", true);
-
         CreateList(_panel.transform);
         return true;
-    }
-
-    private static Text CreateTab(Transform parent, string token, bool favouritesOnly)
-    {
-        GameObject tab = GUIManager.Instance.CreateButton(Localize(token), parent, Vector2.zero, Vector2.zero, Vector2.zero);
-        tab.GetComponent<Button>().onClick.AddListener(() =>
-        {
-            PortalFavourites.FavouritesOnly = favouritesOnly;
-            Rebuild();
-            _scroll.verticalNormalizedPosition = 1f;
-        });
-        return tab.GetComponentInChildren<Text>();
     }
 
     private static void CreateList(Transform parent)
@@ -206,28 +187,23 @@ internal static class PortalPickerPanel
             return;
         }
 
-        bool favouritesOnly = PortalFavourites.FavouritesOnly;
-        Color selected = GUIManager.Instance.ValheimYellow;
-        Color normal = GUIManager.Instance.ValheimBeige;
-        _allTabText.color = favouritesOnly ? normal : selected;
-        _favouritesTabText.color = favouritesOnly ? selected : normal;
-
         UpdateGoBack();
 
         HashSet<string> favourites = PortalFavourites.GetFavourites();
-        IEnumerable<(PortalInfo Portal, bool Favourite, string Label)> rows = Portals
-            .Select(p => (Portal: p, Favourite: favourites.Contains(PortalFavourites.Key(p.Position)), Label: Label(p)))
-            .Where(r => !favouritesOnly || r.Favourite)
-            .OrderByDescending(r => r.Favourite)
+        IEnumerable<(PortalInfo Portal, bool Current, bool Favourite, string Label)> rows = Portals
+            .Select(p => (Portal: p, Current: p.Id == _current,
+                Favourite: favourites.Contains(PortalFavourites.Key(p.Position)), Label: Label(p)))
+            .OrderByDescending(r => r.Current)
+            .ThenByDescending(r => r.Favourite)
             .ThenBy(r => r.Label, System.StringComparer.CurrentCultureIgnoreCase);
 
-        foreach ((PortalInfo portal, bool favourite, string label) in rows)
+        foreach ((PortalInfo portal, bool current, bool favourite, string label) in rows)
         {
-            Rows.Add(CreateRow(portal, favourite, label));
+            Rows.Add(CreateRow(portal, current, favourite, label));
         }
 
         _emptyText.gameObject.SetActive(Rows.Count == 0);
-        _emptyText.text = Localize(favouritesOnly ? "$portalnetwork_no_favourites" : "$portalnetwork_no_other_portals");
+        _emptyText.text = Localize("$portalnetwork_no_other_portals");
     }
 
     private static void UpdateGoBack()
@@ -254,7 +230,7 @@ internal static class PortalPickerPanel
     {
         foreach (PortalInfo candidate in Portals)
         {
-            if (PortalFavourites.Key(candidate.Position) == key)
+            if (candidate.Id != _current && PortalFavourites.Key(candidate.Position) == key)
             {
                 portal = candidate;
                 return true;
@@ -265,7 +241,7 @@ internal static class PortalPickerPanel
         return false;
     }
 
-    private static GameObject CreateRow(PortalInfo portal, bool favourite, string label)
+    private static GameObject CreateRow(PortalInfo portal, bool current, bool favourite, string label)
     {
         GUIManager gui = GUIManager.Instance;
 
@@ -287,19 +263,13 @@ internal static class PortalPickerPanel
         starImage.color = favourite ? StarOn : StarOff;
         Button starButton = star.GetComponent<Button>();
         starButton.transition = Selectable.Transition.None;
-        bool isFavourite = favourite;
         starButton.onClick.AddListener(() =>
         {
-            isFavourite = !isFavourite;
-            PortalFavourites.SetFavourite(portal, isFavourite);
-            starImage.color = isFavourite ? StarOn : StarOff;
-            if (!isFavourite && PortalFavourites.FavouritesOnly)
-            {
-                Rebuild(); // it no longer belongs in this list
-            }
+            PortalFavourites.SetFavourite(portal, !favourite);
+            Rebuild(); // re-sort so favourites move to the top straight away
         });
 
-        // Name and biome: click to teleport
+        // Name and biome: click to teleport (the portal you are standing at is shown but disabled)
         GameObject name = gui.CreateButton(label, row.transform, Vector2.zero, Vector2.zero, Vector2.zero);
         AddLayout(name, height: RowHeight - 4f, flexibleWidth: 1f);
         Text nameText = name.GetComponentInChildren<Text>();
@@ -313,10 +283,18 @@ internal static class PortalPickerPanel
         nameTextRect.anchorMax = Vector2.one;
         nameTextRect.offsetMin = new Vector2(10f, 0f);
         nameTextRect.offsetMax = new Vector2(-6f, 0f);
-        name.GetComponent<Button>().onClick.AddListener(() => PortalMapPicker.Teleport(portal));
+        Button nameButton = name.GetComponent<Button>();
+        nameButton.interactable = !current;
+        if (!current)
+        {
+            nameButton.onClick.AddListener(() => PortalMapPicker.Teleport(portal));
+        }
 
         // Distance
-        Text distance = CreateText(row.transform, FormatDistance(Vector3.Distance(_origin, portal.Position)),
+        string distanceText = current
+            ? Localize("$portalnetwork_here")
+            : FormatDistance(Vector3.Distance(_origin, portal.Position));
+        Text distance = CreateText(row.transform, distanceText,
             gui.AveriaSerifBold, 14, gui.ValheimBeige, TextAnchor.MiddleRight);
         AddLayout(distance.gameObject, width: DistanceWidth, height: RowHeight);
 
@@ -329,6 +307,7 @@ internal static class PortalPickerPanel
         {
             if (row != null)
             {
+                row.SetActive(false);
                 Object.Destroy(row);
             }
         }
@@ -384,11 +363,11 @@ internal static class PortalPickerPanel
         return component;
     }
 
-    private static void SetControl(HorizontalOrVerticalLayoutGroup layout, bool expandWidth = false)
+    private static void SetControl(HorizontalOrVerticalLayoutGroup layout)
     {
         layout.childControlWidth = true;
         layout.childControlHeight = true;
-        layout.childForceExpandWidth = expandWidth || layout is VerticalLayoutGroup;
+        layout.childForceExpandWidth = layout is VerticalLayoutGroup;
         layout.childForceExpandHeight = false;
     }
 

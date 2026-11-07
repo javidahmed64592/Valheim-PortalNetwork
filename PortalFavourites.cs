@@ -14,7 +14,6 @@ internal static class PortalFavourites
 {
     private const string FavouritesPrefix = "PortalNetwork_Favourites_";
     private const string LastTripPrefix = "PortalNetwork_LastTrip_";
-    private const string FavouritesOnlyKey = "PortalNetwork_FavouritesOnly";
     private const char ListSeparator = ';';
     private const char TripSeparator = '|';
 
@@ -52,25 +51,6 @@ internal static class PortalFavourites
         if (changed)
         {
             Set(FavouritesPrefix, string.Join(ListSeparator.ToString(), favourites));
-        }
-    }
-
-    internal static bool FavouritesOnly
-    {
-        get
-        {
-            Player player = Player.m_localPlayer;
-            return player != null
-                && player.m_customData.TryGetValue(FavouritesOnlyKey, out string value)
-                && value == "1";
-        }
-        set
-        {
-            Player player = Player.m_localPlayer;
-            if (player != null)
-            {
-                player.m_customData[FavouritesOnlyKey] = value ? "1" : "0";
-            }
         }
     }
 
