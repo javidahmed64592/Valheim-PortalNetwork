@@ -5,12 +5,13 @@
 # PortalNetwork
 
 Teleport to any portal through a map interface without tag linking.
+To open the portal interface, walk into any portal.
 
 ![PortalNetwork Example](https://github.com/javidahmed64592/Valheim-PortalNetwork/raw/main/images/game_screenshot_1.png)
 
-### Showing Portals on the Map
+### Showing Portals on the Map + Minimap
 
-Open the map normally and press **P** (configurable) to show or hide an icon for every portal you can use.
+To show/hide the portal icons on the map and minimap, open the map as normal and press **P** (configurable).
 
 ### Public and Private Portals
 
