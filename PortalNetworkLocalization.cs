@@ -24,6 +24,12 @@ internal static class PortalNetworkLocalization
             { "portalnetwork_move_closer", "Move closer to the portal and try again" },
             { "portalnetwork_now_public", "Portal visible to everyone" },
             { "portalnetwork_now_private", "Portal visible only to its builder" },
+            { "portalnetwork_panel_title", "Portals" },
+            { "portalnetwork_filter_all", "All" },
+            { "portalnetwork_filter_favourites", "Favourites" },
+            { "portalnetwork_go_back", "Go back to" },
+            { "portalnetwork_no_last_portal", "No previous portal" },
+            { "portalnetwork_no_favourites", "No favourites yet. Click a star to add one." },
             { "portalnetwork_version_mismatch", "PortalNetwork version mismatch between server and client" },
         });
     }

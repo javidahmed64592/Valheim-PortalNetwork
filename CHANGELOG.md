@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.0
+
+- **Portal list.** The portal map now has a list of every portal you can use on its right-hand side, with each portal's biome (e.g. "Home (Plains)") and its distance. Click a name to teleport there.
+- **Favourites.** Click the star next to a portal to make it a favourite. Favourites are listed first, and the **Favourites** tab shows only them. Favourites are saved with your character, separately for each world.
+- **Go back.** A button at the top of the list takes you to your last destination. If you are standing at it, it takes you back to where that trip started, so you can go back and forth between two portals with one click.
+- The mouse wheel scrolls the list instead of zooming the map while the pointer is over it.
+
 ## 0.3.2
 
 - Portal icons are now always drawn in front of other map icons, on both the minimap and the portal map.

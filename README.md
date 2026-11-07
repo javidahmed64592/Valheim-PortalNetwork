@@ -14,6 +14,14 @@ Teleport to any portal through a map interface without tag linking.
 2. **Walk into a portal.** The large map opens with a pin on every portal you can use. Portal pins are drawn on top of all other map icons, and the other icons are faded so the portals stand out.
 3. **Click a pin** to teleport there. To stay where you are, close the map (M or Esc). The map also closes automatically if you move more than 2 metres away from the portal.
 
+### Portal List, Favourites and Going Back
+
+Alongside the map, a list shows every portal you can use, with its biome and distance, e.g. **Home (Plains)**. Click a name to teleport there.
+
+- Click the **star** next to a portal to make it a favourite. Favourites are listed first, and the **Favourites** tab shows only them.
+- **Go back to ...** at the top takes you to your last destination. If you are already there, it takes you back to where you came from, so you can go back and forth between two portals when moving materials.
+- Favourites and your last trip are saved with your character, separately for each world.
+
 ### Showing Portals on the Map
 
 Open the map normally and press **P** (configurable) to show or hide an icon for every portal you can use.
