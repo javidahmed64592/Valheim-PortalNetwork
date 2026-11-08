@@ -74,7 +74,20 @@ internal static class PortalMapPicker
     /// <summary>Called from the Minimap.OnMapLeftClick patch while the picker is active.</summary>
     internal static void HandleClick()
     {
-        Vector2 pointer = ZInput.pointerPosition;
+        PickAt(ZInput.pointerPosition);
+    }
+
+    /// <summary>
+    /// With a gamepad there is no pointer: the map is moved under a crosshair in the middle of the screen,
+    /// and the confirm button picks the portal under it.
+    /// </summary>
+    internal static void HandleGamepadConfirm()
+    {
+        PickAt(new Vector2(Screen.width / 2f, Screen.height / 2f));
+    }
+
+    private static void PickAt(Vector2 pointer)
+    {
         Entry best = null;
         float bestDistance = float.MaxValue;
 

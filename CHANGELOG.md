@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0
+
+- With a gamepad, move the map so a portal icon is under the crosshair and press the confirm button to travel there. Previously the portal map only responded to the mouse. While the portal map is open, the confirm button no longer opens the box for naming a new pin.
+- The README now explains that a private portal is only hidden from the map: anyone who walks into it can still use it.
+- Added a CI check that the version matches in every file.
+
 ## 0.4.0
 
 - **Portal list.** The portal map now has a list of every portal you can use on its left-hand side, with each portal's biome (e.g. "Home (Plains)") and its distance. Click a name to teleport there. The portal you are standing at is always listed first, marked "You are here".
