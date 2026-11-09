@@ -21,6 +21,28 @@ internal static class Minimap_OnMapLeftClick_Patch
 }
 
 /// <summary>
+/// With a gamepad, the confirm button on the map opens the box for naming a new pin at the crosshair. While the
+/// portal picker is open it picks the portal under the crosshair instead, and no pins are added.
+/// </summary>
+[HarmonyPatch(typeof(Minimap), "ShowPinNameInput")]
+internal static class Minimap_ShowPinNameInput_Patch
+{
+    private static bool Prefix()
+    {
+        if (!PortalMapPicker.IsActive)
+        {
+            return true;
+        }
+
+        if (!ZInput.IsMouseActive())
+        {
+            PortalMapPicker.HandleGamepadConfirm();
+        }
+        return false; // skip vanilla
+    }
+}
+
+/// <summary>
 /// Whenever the large map closes (M, Esc, or after picking), remove the picker's pins.
 /// </summary>
 [HarmonyPatch(typeof(Minimap), nameof(Minimap.SetMapMode))]

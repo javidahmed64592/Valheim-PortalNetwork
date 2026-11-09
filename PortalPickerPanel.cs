@@ -24,6 +24,8 @@ internal static class PortalPickerPanel
     private const float StarSize = 26f;
     private const float DistanceWidth = 64f;
     private const int Padding = 16;
+    /// <summary>Used if the crafting list cannot be found; its value at the time of writing.</summary>
+    private const float FallbackScrollSensitivity = 3000f;
 
     private static readonly Color StarOn = new(1f, 0.8f, 0.2f, 1f);
     private static readonly Color StarOff = new(1f, 1f, 1f, 0.25f);
@@ -68,6 +70,7 @@ internal static class PortalPickerPanel
         _origin = origin;
         _current = current;
 
+        _scroll.scrollSensitivity = VanillaScrollSensitivity();
         _panel.transform.SetAsLastSibling(); // above the map image so it receives the clicks
         _panel.SetActive(true);
         Rebuild();
@@ -82,6 +85,21 @@ internal static class PortalPickerPanel
         {
             _panel.SetActive(false);
         }
+    }
+
+    /// <summary>
+    /// The scroll speed of the crafting list, so the wheel moves this list as fast as vanilla lists.
+    /// </summary>
+    private static float VanillaScrollSensitivity()
+    {
+        InventoryGui inventory = InventoryGui.instance;
+        if (inventory == null || inventory.m_recipeEnsureVisible == null)
+        {
+            return FallbackScrollSensitivity;
+        }
+
+        ScrollRect vanilla = inventory.m_recipeEnsureVisible.GetComponent<ScrollRect>();
+        return vanilla != null ? vanilla.scrollSensitivity : FallbackScrollSensitivity;
     }
 
     // ------------------------------------------------------------------ building
@@ -168,7 +186,6 @@ internal static class PortalPickerPanel
         _scroll.horizontal = false;
         _scroll.vertical = true;
         _scroll.movementType = ScrollRect.MovementType.Clamped;
-        _scroll.scrollSensitivity = 35f;
         _scroll.verticalScrollbar = scrollbar;
         _scroll.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
 

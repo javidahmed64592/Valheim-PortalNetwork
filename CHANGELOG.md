@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.0
+
+- With a gamepad, move the map so a portal icon is under the crosshair and press the confirm button to travel there. Previously the portal map only responded to the mouse. While the portal map is open, the confirm button no longer opens the box for naming a new pin.
+- The mouse wheel now scrolls the portal list as fast as the game's own lists, such as the crafting list. It was much slower before.
+- The README now explains that a private portal is only hidden from the map: anyone who walks into it can still use it.
+- Added a CI check that the version matches in every file.
+- Moved `package.sh` into `.github/scripts` and made it the same for every mod: the name, version and DLL now come from `manifest.json` and the `.csproj`.
+
 ## 0.4.0
 
 - **Portal list.** The portal map now has a list of every portal you can use on its left-hand side, with each portal's biome (e.g. "Home (Plains)") and its distance. Click a name to teleport there. The portal you are standing at is always listed first, marked "You are here".
