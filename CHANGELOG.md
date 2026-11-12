@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.0
+
+- When another player teleports, their map icon now takes the same time to reach their destination however far they went. Before, it moved at a fixed speed, so it could take a long time to cross the map after a long trip. The time can be changed with the new `PlayerIconTeleportSeconds` setting (default 2 seconds, 0 = instant).
+
 ## 0.5.0
 
 - With a gamepad, move the map so a portal icon is under the crosshair and press the confirm button to travel there. Previously the portal map only responded to the mouse. While the portal map is open, the confirm button no longer opens the box for naming a new pin.
