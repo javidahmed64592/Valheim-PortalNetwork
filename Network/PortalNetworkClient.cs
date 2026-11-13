@@ -1,8 +1,11 @@
 using System.Collections.Generic;
 
+using PortalNetwork.Map;
+using PortalNetwork.Portals;
+
 using UnityEngine;
 
-namespace PortalNetwork;
+namespace PortalNetwork.Network;
 
 internal static class PortalNetworkClient
 {

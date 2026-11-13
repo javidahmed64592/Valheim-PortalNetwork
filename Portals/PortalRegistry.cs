@@ -1,8 +1,10 @@
 using System.Collections.Generic;
 
+using PortalNetwork.Core;
+
 using UnityEngine;
 
-namespace PortalNetwork;
+namespace PortalNetwork.Portals;
 
 internal enum PortalVisibility
 {

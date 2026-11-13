@@ -1,4 +1,4 @@
-namespace PortalNetwork;
+namespace PortalNetwork.Core;
 
 internal struct Requester(long playerId, bool isAdmin)
 {

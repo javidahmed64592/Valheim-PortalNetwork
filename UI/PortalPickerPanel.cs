@@ -4,10 +4,14 @@ using System.Linq;
 
 using Jotunn.Managers;
 
+using PortalNetwork.Core;
+using PortalNetwork.Map;
+using PortalNetwork.Portals;
+
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace PortalNetwork;
+namespace PortalNetwork.UI;
 
 /// <summary>
 /// A list of reachable portals shown on the left of the large map while the picker is open.

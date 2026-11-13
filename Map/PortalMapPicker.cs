@@ -1,8 +1,13 @@
 using System.Collections.Generic;
 
+using PortalNetwork.Core;
+using PortalNetwork.Network;
+using PortalNetwork.Portals;
+using PortalNetwork.UI;
+
 using UnityEngine;
 
-namespace PortalNetwork;
+namespace PortalNetwork.Map;
 
 internal static class PortalMapPicker
 {

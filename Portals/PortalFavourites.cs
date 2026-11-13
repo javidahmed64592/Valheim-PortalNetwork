@@ -3,7 +3,7 @@ using System.Globalization;
 
 using UnityEngine;
 
-namespace PortalNetwork;
+namespace PortalNetwork.Portals;
 
 /// <summary>
 /// Per-character, per-world favourites and last trip, kept in the character's save (Player.m_customData).

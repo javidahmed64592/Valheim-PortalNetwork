@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 using Jotunn.Managers;
 
-namespace PortalNetwork;
+namespace PortalNetwork.Core;
 
 internal static class PortalNetworkLocalization
 {

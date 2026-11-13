@@ -13,6 +13,10 @@ To open the portal interface, walk into any portal.
 
 To show/hide the portal icons on the map and minimap, open the map as normal and press **P** (configurable).
 
+### Pinging Your Location
+
+Press **P** (configurable) while walking around, with no map or menu open, to ping your location on everyone's map. It's the same ping as clicking on the map, so other players can find you without you opening the map.
+
 ### Public and Private Portals
 
 Every portal is **public** by default, so everyone can see and use it.

@@ -5,9 +5,13 @@ using System.Collections.Generic;
 using Jotunn.Entities;
 using Jotunn.Managers;
 
+using PortalNetwork.Core;
+using PortalNetwork.Patches;
+using PortalNetwork.Portals;
+
 using UnityEngine;
 
-namespace PortalNetwork;
+namespace PortalNetwork.Network;
 
 internal static class PortalNetworkRpc
 {

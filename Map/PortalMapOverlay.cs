@@ -1,6 +1,10 @@
 using System.Collections.Generic;
 
-namespace PortalNetwork;
+using PortalNetwork.Core;
+using PortalNetwork.Network;
+using PortalNetwork.Portals;
+
+namespace PortalNetwork.Map;
 
 /// <summary>
 /// Optional portal icons on the normal map, toggled with a keybind. Unlike the picker, these pins are not clickable.

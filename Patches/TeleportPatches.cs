@@ -1,6 +1,8 @@
 using HarmonyLib;
 
-namespace PortalNetwork;
+using PortalNetwork.Network;
+
+namespace PortalNetwork.Patches;
 
 [HarmonyPatch(typeof(TeleportWorld), nameof(TeleportWorld.Teleport))]
 internal static class TeleportWorld_Teleport_Patch

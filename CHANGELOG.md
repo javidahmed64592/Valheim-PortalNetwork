@@ -3,6 +3,8 @@
 ## 0.6.0
 
 - When another player teleports, their map icon now takes the same time to reach their destination however far they went. Before, it moved at a fixed speed, so it could take a long time to cross the map after a long trip. The time can be changed with the new `PlayerIconTeleportSeconds` setting (default 2 seconds, 0 = instant).
+- Press **P** while walking around, with no map or menu open, to ping your location on everyone's map. Other players can find you without you opening the map. The key can be changed with the new `PingLocation` setting.
+- Moved the source files into folders (`Core`, `Network`, `Portals`, `Map`, `UI`, `Patches`), leaving only `Plugin.cs` at the root. No behaviour change.
 
 ## 0.5.0
 

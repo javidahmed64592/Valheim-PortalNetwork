@@ -2,7 +2,11 @@ using System;
 
 using HarmonyLib;
 
-namespace PortalNetwork;
+using PortalNetwork.Core;
+using PortalNetwork.Network;
+using PortalNetwork.Portals;
+
+namespace PortalNetwork.Patches;
 
 internal static class PortalOwnership
 {

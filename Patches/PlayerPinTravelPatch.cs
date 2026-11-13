@@ -5,7 +5,7 @@ using HarmonyLib;
 
 using UnityEngine;
 
-namespace PortalNetwork;
+namespace PortalNetwork.Patches;
 
 /// <summary>
 /// Vanilla slides other players' map icons towards their new position at a fixed 200 m/s, so the icon of a player who

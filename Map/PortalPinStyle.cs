@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 using UnityEngine;
 
-namespace PortalNetwork;
+namespace PortalNetwork.Map;
 
 /// <summary>
 /// Per-frame styling for our portal pins: red tint, drawn above every other pin, and (in the picker) other pins dimmed.

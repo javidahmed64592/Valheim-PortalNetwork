@@ -4,12 +4,15 @@ using System.Text.RegularExpressions;
 
 using BepInEx.Configuration;
 
+using PortalNetwork.Core;
+using PortalNetwork.Map;
+
 using TMPro;
 
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace PortalNetwork;
+namespace PortalNetwork.UI;
 
 /// <summary>
 /// Adds a "Toggle portals" entry for the portal icon key to the large map's key hints, built from clones

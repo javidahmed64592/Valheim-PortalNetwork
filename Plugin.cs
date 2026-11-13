@@ -7,6 +7,9 @@ using HarmonyLib;
 using Jotunn;
 using Jotunn.Utils;
 
+using PortalNetwork.Core;
+using PortalNetwork.Network;
+
 using UnityEngine;
 
 namespace PortalNetwork;
@@ -22,6 +25,7 @@ public class PortalNetworkPlugin : BaseUnityPlugin
 
     internal static ManualLogSource _log;
     internal static ConfigEntry<KeyboardShortcut> _toggleKey;
+    internal static ConfigEntry<KeyboardShortcut> _pingKey;
     internal static ConfigEntry<float> _otherPinOpacity;
     internal static ConfigEntry<float> _playerIconTeleportSeconds;
     private Harmony _harmony;
@@ -34,6 +38,11 @@ public class PortalNetworkPlugin : BaseUnityPlugin
             "TogglePortalIcons",
             new KeyboardShortcut(KeyCode.P),
             "Press while the map is open to show or hide portal icons on it.");
+        _pingKey = Config.Bind(
+            "Map",
+            "PingLocation",
+            new KeyboardShortcut(KeyCode.P),
+            "Press while no map or menu is open to ping your location on everyone's map.");
         _otherPinOpacity = Config.Bind(
             "Map",
             "PickerOtherIconOpacity",
