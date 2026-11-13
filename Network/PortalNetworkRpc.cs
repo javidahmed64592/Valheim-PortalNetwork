@@ -158,7 +158,7 @@ internal static class PortalNetworkRpc
     private static IEnumerator OnListResponse(long sender, ZPackage package)
     {
         int count = package.ReadInt();
-        List<PortalInfo> portals = new(count);
+        List<PortalInfo> portals = [];
         for (int i = 0; i < count; i++)
         {
             portals.Add(ReadPortal(package));
