@@ -146,7 +146,7 @@ internal static class TeleportWorld_GetHoverText_Patch
         Player local = Player.m_localPlayer;
         if (local != null)
         {
-            Requester who = new(local.GetPlayerID(), ZNet.instance.LocalPlayerIsAdminOrHost());
+            Requester who = new(local.GetPlayerID(), PlayerIdentity.LocalIsAdmin());
             if (!isHome && PortalRegistry.CanChange(info, who))
             {
                 text += Hint("Shift + $KEY_Use", "$portalnetwork_toggle_hint");

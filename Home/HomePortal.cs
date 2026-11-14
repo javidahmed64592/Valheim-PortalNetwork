@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 using BepInEx.Configuration;
 
+using PortalNetwork.Core;
 using PortalNetwork.Map;
 using PortalNetwork.Network;
 using PortalNetwork.Portals;
@@ -47,7 +48,7 @@ internal static class HomePortal
     /// <summary>Admins and the host may set and remove the home portal. The server checks again.</summary>
     internal static bool LocalPlayerCanSetHome()
     {
-        return ZNet.instance != null && ZNet.instance.LocalPlayerIsAdminOrHost();
+        return PlayerIdentity.LocalIsAdmin();
     }
 
     /// <summary>Every list includes the home portal, since it is always public.</summary>
