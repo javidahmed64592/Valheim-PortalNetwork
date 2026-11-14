@@ -17,6 +17,9 @@ internal static class PortalFavourites
     private const char ListSeparator = ';';
     private const char TripSeparator = '|';
 
+    private static string _cachedValue;
+    private static HashSet<string> _cachedFavourites = [];
+
     internal static string Key(Vector3 position)
     {
         return string.Format(
@@ -27,25 +30,35 @@ internal static class PortalFavourites
             Mathf.RoundToInt(position.z));
     }
 
+    /// <summary>
+    /// The favourite portals' keys. Called every frame for the map icons, so the parsed set is reused until the saved
+    /// value changes; callers must not modify it.
+    /// </summary>
     internal static HashSet<string> GetFavourites()
     {
-        HashSet<string> result = [];
-        if (TryGet(FavouritesPrefix, out string value))
+        string value = TryGet(FavouritesPrefix, out string saved) ? saved : "";
+        if (value == _cachedValue)
         {
-            foreach (string key in value.Split(ListSeparator))
+            return _cachedFavourites;
+        }
+
+        HashSet<string> result = [];
+        foreach (string key in value.Split(ListSeparator))
+        {
+            if (key.Length > 0)
             {
-                if (key.Length > 0)
-                {
-                    _ = result.Add(key);
-                }
+                _ = result.Add(key);
             }
         }
+
+        _cachedValue = value;
+        _cachedFavourites = result;
         return result;
     }
 
     internal static void SetFavourite(PortalInfo portal, bool favourite)
     {
-        HashSet<string> favourites = GetFavourites();
+        HashSet<string> favourites = [.. GetFavourites()]; // a copy, since the cached set is shared
         string key = Key(portal.Position);
         bool changed = favourite ? favourites.Add(key) : favourites.Remove(key);
         if (changed)
