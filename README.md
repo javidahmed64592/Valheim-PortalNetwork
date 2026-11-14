@@ -6,32 +6,29 @@
 
 Teleport to any portal through a map interface without tag linking.
 To open the portal interface, walk into any portal.
+To show/hide the portal icons on the map and minimap, open the map as normal and press `P` (configurable).
 
 ![PortalNetwork Example](https://github.com/javidahmed64592/Valheim-PortalNetwork/raw/main/images/game_screenshot_1.png)
 
-### Showing Portals on the Map + Minimap
-
-To show/hide the portal icons on the map and minimap, open the map as normal and press **P** (configurable).
-
-### Home Portal
+## Home Portal
 
 Each world can have one **home portal**, shared by everyone.
 
-- Admins, and the host of a self-hosted world, press **Shift + H** while looking at a portal, or with the portal map open, to make that portal the home portal. It becomes public, and can't be made private while it is home. Press **Shift + H** at the home portal to stop it being home.
-- Press **H** while looking at any other portal, or with the portal map open, to travel straight home. Nothing happens if you're already at the home portal.
+- Admins, and the host of a self-hosted world, press `Shift + H` while looking at a portal, or with the portal map open, to make that portal the home portal. It becomes public, and can't be made private while it is home. Press `Shift + H` at the home portal to stop it being home.
+- Press `H` while looking at any other portal, or with the portal map open, to travel straight home. Nothing happens if you're already at the home portal.
 - The portal map's key hints show these keys whenever pressing them would do something.
 - The home portal is green on the map and comes first in the portal list, with a house instead of the favourite star.
 - If the home portal is destroyed, the previous home portal becomes home again, unless it was removed as home or made private.
 
-### Pinging Your Location
+## Pinging Your Location
 
-Press **P** (configurable) while walking around, with no map or menu open, to ping your location on everyone's map. It's the same ping as clicking on the map, so other players can find you without you opening the map.
+Press `P` (configurable) while walking around, with no map or menu open, to ping your location on everyone's map. It's the same ping as clicking on the map, so other players can find you without you opening the map.
 
-### Public and Private Portals
+## Public and Private Portals
 
 Every portal is **public** by default, so everyone can see and use it.
 
-- **Shift + Use** on a portal you built toggles it between **public** and **private**.
+- `Shift + Use` on a portal you built toggles it between **public** and **private**.
 - A private portal only appears on its builder's map. Anyone who walks into it can still use it to travel to the portals they can see.
 - Hover over a portal to see its current visibility.
 
