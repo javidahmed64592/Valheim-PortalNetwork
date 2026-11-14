@@ -8,6 +8,7 @@
 - Fixed portal names, public/private settings and the home portal sometimes being lost when the world was reloaded. The game only saved changes to portals in a session where a portal was also built, destroyed or linked, which rarely happens with this mod. Portals are now saved every time the world is.
 - Fixed admins on a crossplay dedicated server not seeing the admin-only key hints on portals, such as toggling another player's portal's visibility. The keys themselves already worked.
 - Favourite portals have a gold ring around their icon on the map and minimap, so they stand out from the other portals.
+- The portal icon colours and the favourite ring can be changed in the new `Icons` config section: `PortalIconColour`, `HomePortalColour`, `FavouriteColour`, `FavouriteRingSize` and `FavouriteRingThickness`.
 - Moved the source files into folders (`Core`, `Network`, `Portals`, `Home`, `Map`, `UI`, `Patches`), leaving only `Plugin.cs` at the root. No behaviour change.
 
 ## 0.5.0

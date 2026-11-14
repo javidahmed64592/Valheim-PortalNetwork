@@ -32,7 +32,7 @@ internal static class PortalPickerPanel
     /// <summary>Used if the crafting list cannot be found; its value at the time of writing.</summary>
     private const float FallbackScrollSensitivity = 3000f;
 
-    private static readonly Color StarOn = PortalPinStyle.FavouriteColor;
+    private static Color StarOn => PortalPinStyle.FavouriteColor;
     private static readonly Color StarOff = new(1f, 1f, 1f, 0.25f);
     private static readonly Color ListBackground = new(0f, 0f, 0f, 0.35f);
 

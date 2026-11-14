@@ -30,6 +30,11 @@ public class PortalNetworkPlugin : BaseUnityPlugin
     internal static ConfigEntry<KeyboardShortcut> _setHomeKey;
     internal static ConfigEntry<float> _otherPinOpacity;
     internal static ConfigEntry<float> _playerIconTeleportSeconds;
+    internal static ConfigEntry<Color> _portalIconColour;
+    internal static ConfigEntry<Color> _homeIconColour;
+    internal static ConfigEntry<Color> _favouriteRingColour;
+    internal static ConfigEntry<float> _favouriteRingSize;
+    internal static ConfigEntry<float> _favouriteRingThickness;
     private Harmony _harmony;
 
     private void Awake()
@@ -69,6 +74,35 @@ public class PortalNetworkPlugin : BaseUnityPlugin
             new ConfigDescription(
                 "Seconds another player's map icon takes to move to where they teleported, however far it is (0 = instant).",
                 new AcceptableValueRange<float>(0f, 30f)));
+        _portalIconColour = Config.Bind(
+            "Icons",
+            "PortalIconColour",
+            Color.red,
+            "Colour of portal icons on the map and minimap, as RRGGBBAA hex.");
+        _homeIconColour = Config.Bind(
+            "Icons",
+            "HomePortalColour",
+            new Color(0.3f, 0.85f, 0.3f, 1f),
+            "Colour of the home portal's icon on the map, its house in the portal list and its hover text, as RRGGBBAA hex.");
+        _favouriteRingColour = Config.Bind(
+            "Icons",
+            "FavouriteColour",
+            new Color(1f, 0.8f, 0.2f, 1f),
+            "Colour of the ring around favourite portals' icons and of the favourite star in the portal list, as RRGGBBAA hex.");
+        _favouriteRingSize = Config.Bind(
+            "Icons",
+            "FavouriteRingSize",
+            0.1f,
+            new ConfigDescription(
+                "How far the ring around favourite portals' icons sits outside the icon, as a fraction of the icon's size.",
+                new AcceptableValueRange<float>(0f, 0.5f)));
+        _favouriteRingThickness = Config.Bind(
+            "Icons",
+            "FavouriteRingThickness",
+            0.04f,
+            new ConfigDescription(
+                "Thickness of the ring around favourite portals' icons, as a fraction of the ring's size (0.5 = a filled circle).",
+                new AcceptableValueRange<float>(0.01f, 0.5f)));
         PortalNetworkLocalization.Register();
         PortalNetworkRpc.Register();
         _harmony = new Harmony(PluginGuid);

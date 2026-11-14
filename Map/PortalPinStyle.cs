@@ -8,23 +8,26 @@ using UnityEngine.UI;
 namespace PortalNetwork.Map;
 
 /// <summary>
-/// Per-frame styling for our portal pins: red tint (green for the home portal), a gold ring for favourites, drawn above every other pin, and (in the picker) other pins dimmed.
+/// Per-frame styling for our portal pins, in the configured colours: a tint (another for the home portal), a ring for
+/// favourites, drawn above every other pin, and (in the picker) other pins dimmed.
 /// Vanilla UpdatePins only runs when pins change, and then resets colours, so everything here sets absolute values.
 /// </summary>
 internal static class PortalPinStyle
 {
-    internal static readonly Color HomeColor = new(0.3f, 0.85f, 0.3f, 1f);
+    internal static Color PortalColor => PortalNetworkPlugin._portalIconColour.Value;
 
-    /// <summary>The favourite star's gold, also used for the border around favourite portals' icons.</summary>
-    internal static readonly Color FavouriteColor = new(1f, 0.8f, 0.2f, 1f);
+    internal static Color HomeColor => PortalNetworkPlugin._homeIconColour.Value;
+
+    /// <summary>The favourite star's colour, also used for the ring around favourite portals' icons.</summary>
+    internal static Color FavouriteColor => PortalNetworkPlugin._favouriteRingColour.Value;
 
     private const string RingName = "PortalNetwork_FavouriteRing";
 
     /// <summary>How far the ring extends past each side of the icon, as a fraction of the icon's size.</summary>
-    private const float RingMargin = 0.10f;
+    private static float RingMargin => PortalNetworkPlugin._favouriteRingSize.Value;
 
     /// <summary>The ring's thickness, as a fraction of the ring image's size.</summary>
-    private const float RingThickness = 0.04f;
+    private static float RingThickness => PortalNetworkPlugin._favouriteRingThickness.Value;
 
     private static Sprite _ringSprite;
 
@@ -32,7 +35,7 @@ internal static class PortalPinStyle
     private static readonly List<Transform> Names = [];
 
     /// <summary>
-    /// Tints the given pins red, or green for <paramref name="home"/>, gives favourite portals a gold ring, and keeps
+    /// Tints the given pins, with the home colour for <paramref name="home"/>, gives favourite portals a ring, and keeps
     /// their icons and labels drawn in front of all other pins.
     /// </summary>
     internal static void Apply(IEnumerable<Minimap.PinData> pins, Minimap.PinData home)
@@ -44,7 +47,7 @@ internal static class PortalPinStyle
         {
             if (pin.m_iconElement != null)
             {
-                pin.m_iconElement.color = pin == home ? HomeColor : Color.red;
+                pin.m_iconElement.color = pin == home ? HomeColor : PortalColor;
 
                 // Our pins sit exactly on their portal, and favourites are stored by portal position.
                 SetBorder(pin.m_iconElement, favourites.Contains(PortalFavourites.Key(pin.m_pos)));
@@ -114,7 +117,7 @@ internal static class PortalPinStyle
 
         const int size = 128;
         const float outer = size / 2f;
-        const float inner = outer - (size * RingThickness);
+        float inner = outer - (size * RingThickness);
         Vector2 centre = new(size / 2f, size / 2f);
 
         Texture2D texture = new(size, size, TextureFormat.RGBA32, false)
