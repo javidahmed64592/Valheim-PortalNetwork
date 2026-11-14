@@ -2,19 +2,24 @@ using System.Collections.Generic;
 
 using UnityEngine;
 
-namespace PortalNetwork;
+namespace PortalNetwork.Map;
 
 /// <summary>
-/// Per-frame styling for our portal pins: red tint, drawn above every other pin, and (in the picker) other pins dimmed.
+/// Per-frame styling for our portal pins: red tint (green for the home portal), drawn above every other pin, and (in the picker) other pins dimmed.
 /// Vanilla UpdatePins only runs when pins change, and then resets colours, so everything here sets absolute values.
 /// </summary>
 internal static class PortalPinStyle
 {
+    internal static readonly Color HomeColor = new(0.3f, 0.85f, 0.3f, 1f);
+
     private static readonly List<Transform> Icons = [];
     private static readonly List<Transform> Names = [];
 
-    /// <summary>Tints the given pins red and keeps their icons and labels drawn in front of all other pins.</summary>
-    internal static void Apply(IEnumerable<Minimap.PinData> pins)
+    /// <summary>
+    /// Tints the given pins red, or green for <paramref name="home"/>, and keeps their icons and labels drawn in front
+    /// of all other pins.
+    /// </summary>
+    internal static void Apply(IEnumerable<Minimap.PinData> pins, Minimap.PinData home)
     {
         Icons.Clear();
         Names.Clear();
@@ -22,7 +27,7 @@ internal static class PortalPinStyle
         {
             if (pin.m_iconElement != null)
             {
-                pin.m_iconElement.color = Color.red;
+                pin.m_iconElement.color = pin == home ? HomeColor : Color.red;
             }
             if (pin.m_uiElement != null)
             {

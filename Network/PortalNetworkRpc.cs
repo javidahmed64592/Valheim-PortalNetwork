@@ -5,16 +5,21 @@ using System.Collections.Generic;
 using Jotunn.Entities;
 using Jotunn.Managers;
 
+using PortalNetwork.Core;
+using PortalNetwork.Home;
+using PortalNetwork.Patches;
+using PortalNetwork.Portals;
+
 using UnityEngine;
 
-namespace PortalNetwork;
+namespace PortalNetwork.Network;
 
 internal static class PortalNetworkRpc
 {
     /// <summary>
     /// Bump this, and the plugin's minor version, whenever the wire format changes.
     /// </summary>
-    private const int ProtocolVersion = 2;
+    private const int ProtocolVersion = 3;
 
     private static CustomRPC _listRequest;
     private static CustomRPC _listResponse;
@@ -22,6 +27,10 @@ internal static class PortalNetworkRpc
     private static CustomRPC _teleportResponse;
     private static CustomRPC _visibilityRequest;
     private static CustomRPC _notice;
+    private static CustomRPC _setHomeRequest;
+    private static CustomRPC _homeTeleportRequest;
+    private static CustomRPC _homeRequest;
+    private static CustomRPC _homeResponse;
 
     private static long ServerId => ZRoutedRpc.instance.GetServerPeerID();
 
@@ -36,6 +45,10 @@ internal static class PortalNetworkRpc
         _teleportResponse = NetworkManager.Instance.AddRPC("PortalNetwork_TeleportResponse", OnTeleportResponse, OnTeleportResponse);
         _visibilityRequest = NetworkManager.Instance.AddRPC("PortalNetwork_VisibilityRequest", OnVisibilityRequest, Ignore);
         _notice = NetworkManager.Instance.AddRPC("PortalNetwork_Notice", OnNotice, OnNotice);
+        _setHomeRequest = NetworkManager.Instance.AddRPC("PortalNetwork_SetHomeRequest", OnSetHomeRequest, Ignore);
+        _homeTeleportRequest = NetworkManager.Instance.AddRPC("PortalNetwork_HomeTeleportRequest", OnHomeTeleportRequest, Ignore);
+        _homeRequest = NetworkManager.Instance.AddRPC("PortalNetwork_HomeRequest", OnHomeRequest, Ignore);
+        _homeResponse = NetworkManager.Instance.AddRPC("PortalNetwork_HomeResponse", OnHomeResponse, OnHomeResponse);
     }
 
     // ---------------------------------------------------------------- client -> server
@@ -60,6 +73,28 @@ internal static class PortalNetworkRpc
         package.Write(portalId);
         package.Write((int)visibility);
         _visibilityRequest.SendPackage(ServerId, package);
+    }
+
+    /// <summary>Makes the portal the home portal, or with <paramref name="home"/> false, stops it being home.</summary>
+    internal static void SendSetHomeRequest(ZDOID portalId, bool home)
+    {
+        ZPackage package = new();
+        package.Write(portalId);
+        package.Write(home);
+        _setHomeRequest.SendPackage(ServerId, package);
+    }
+
+    /// <summary><paramref name="fromPortalId"/> is the portal the player is at; nothing happens if it is home.</summary>
+    internal static void SendHomeTeleportRequest(ZDOID fromPortalId)
+    {
+        ZPackage package = new();
+        package.Write(fromPortalId);
+        _homeTeleportRequest.SendPackage(ServerId, package);
+    }
+
+    internal static void SendHomeRequest()
+    {
+        _homeRequest.SendPackage(ServerId, new ZPackage());
     }
 
     // ------------------------------------------------------------ server-side handlers
@@ -91,22 +126,116 @@ internal static class PortalNetworkRpc
         ZDOID portalId = package.ReadZDOID();
         Requester who = PlayerIdentity.Resolve(sender);
 
-        ZPackage response = new();
-        if (PortalRegistry.TryGetPortal(portalId, out ZDO zdo)
-            && PortalRegistry.IsVisibleTo(PortalRegistry.ToInfo(zdo), who))
+        bool allowed = PortalRegistry.TryGetPortal(portalId, out ZDO zdo)
+            && PortalRegistry.IsVisibleTo(PortalRegistry.ToInfo(zdo), who);
+        SendTeleportResponse(sender, allowed ? zdo : null);
+        yield break;
+    }
+
+    private static IEnumerator OnHomeTeleportRequest(long sender, ZPackage package)
+    {
+        ZDOID fromPortalId = package.ReadZDOID();
+        ZDOID home = PortalRegistry.FindHome();
+        if (home.IsNone())
         {
-            PortalInfo portal = PortalRegistry.ToInfo(zdo);
+            SendNotice(sender, "$portalnetwork_no_home");
+            yield break;
+        }
+
+        if (home == fromPortalId)
+        {
+            yield break; // already at home
+        }
+
+        // The home portal is always public, so everyone may use it.
+        SendTeleportResponse(sender, PortalRegistry.TryGetPortal(home, out ZDO zdo) ? zdo : null);
+    }
+
+    /// <summary>Approves a teleport to <paramref name="portal"/>, or refuses it if null.</summary>
+    private static void SendTeleportResponse(long peer, ZDO portal)
+    {
+        ZPackage response = new();
+        if (portal != null)
+        {
+            PortalInfo info = PortalRegistry.ToInfo(portal);
             response.Write(true);
-            response.Write(portal.Name ?? "");
-            response.Write(portal.Position);
-            response.Write(portal.Rotation);
+            response.Write(info.Name ?? "");
+            response.Write(info.Position);
+            response.Write(info.Rotation);
         }
         else
         {
             response.Write(false);
         }
-        _teleportResponse.SendPackage(sender, response);
+        _teleportResponse.SendPackage(peer, response);
+    }
+
+    private static IEnumerator OnSetHomeRequest(long sender, ZPackage package)
+    {
+        ZDOID portalId = package.ReadZDOID();
+        bool home = package.ReadBool();
+        Requester who = PlayerIdentity.Resolve(sender);
+
+        if (!PortalRegistry.CanSetHome(who))
+        {
+            SendNotice(sender, "$portalnetwork_only_admin_home");
+            yield break;
+        }
+
+        if (!PortalRegistry.TryGetPortal(portalId, out ZDO zdo))
+        {
+            SendNotice(sender, "$portalnetwork_portal_missing");
+            yield break;
+        }
+
+        bool isHome = PortalRegistry.FindHome() == portalId;
+        if (home == isHome)
+        {
+            SendNotice(sender, home ? "$portalnetwork_already_home" : "$portalnetwork_not_home");
+            yield break;
+        }
+
+        // Only the ZDO's owner may write to it, so hand the change to them.
+        long owner = zdo.GetOwner();
+        if (owner == 0L)
+        {
+            SendNotice(sender, "$portalnetwork_move_closer");
+            yield break;
+        }
+
+        // Removing records the time as a negative number, so it still counts as the latest change.
+        long time = ZNet.instance.GetTime().Ticks;
+        ZRoutedRpc.instance.InvokeRoutedRPC(owner, zdo.m_uid, PortalOwnership.SetHomeRpc, home ? time : -time);
+        ZDOID newHome = home ? portalId : ZDOID.None;
+        PortalRegistry.OnHomeChanged(newHome);
+        AnnounceHome(newHome);
+        SendNotice(sender, home ? "$portalnetwork_home_set" : "$portalnetwork_home_removed");
+    }
+
+    private static IEnumerator OnHomeRequest(long sender, ZPackage package)
+    {
+        SendHome(sender, PortalRegistry.FindHome());
         yield break;
+    }
+
+    /// <summary>
+    /// Tells every client. Jotunn only sends "everybody" packages to other peers, so the host's own client is told
+    /// separately; a dedicated server has no player to tell.
+    /// </summary>
+    private static void AnnounceHome(ZDOID home)
+    {
+        SendHome(ZRoutedRpc.Everybody, home);
+        if (!ZNet.instance.IsDedicated())
+        {
+            SendHome(ZRoutedRpc.instance.m_id, home);
+        }
+    }
+
+    private static void SendHome(long peer, ZDOID home)
+    {
+        ZPackage package = new();
+        package.Write(home);
+        _homeResponse.SendPackage(peer, package);
     }
 
     private static IEnumerator OnVisibilityRequest(long sender, ZPackage package)
@@ -125,6 +254,12 @@ internal static class PortalNetworkRpc
         if (!PortalRegistry.CanChange(portal, who))
         {
             SendNotice(sender, "$portalnetwork_only_builder");
+            yield break;
+        }
+
+        if (value == (int)PortalVisibility.Private && PortalRegistry.FindHome() == portalId)
+        {
+            SendNotice(sender, "$portalnetwork_home_must_be_public");
             yield break;
         }
 
@@ -154,7 +289,7 @@ internal static class PortalNetworkRpc
     private static IEnumerator OnListResponse(long sender, ZPackage package)
     {
         int count = package.ReadInt();
-        List<PortalInfo> portals = new(count);
+        List<PortalInfo> portals = [];
         for (int i = 0; i < count; i++)
         {
             portals.Add(ReadPortal(package));
@@ -175,6 +310,12 @@ internal static class PortalNetworkRpc
         Vector3 position = package.ReadVector3();
         Quaternion rotation = package.ReadQuaternion();
         PortalNetworkClient.OnTeleportApproved(name, position, rotation);
+    }
+
+    private static IEnumerator OnHomeResponse(long sender, ZPackage package)
+    {
+        HomePortal.OnHomeReceived(package.ReadZDOID());
+        yield break;
     }
 
     private static IEnumerator OnNotice(long sender, ZPackage package)
@@ -199,6 +340,7 @@ internal static class PortalNetworkRpc
         package.Write(portal.Rotation);
         package.Write(portal.OwnerId);
         package.Write((int)portal.Visibility);
+        package.Write(portal.IsHome);
     }
 
     private static PortalInfo ReadPortal(ZPackage package)
@@ -212,6 +354,7 @@ internal static class PortalNetworkRpc
             Rotation = package.ReadQuaternion(),
             OwnerId = package.ReadLong(),
             Visibility = (PortalVisibility)package.ReadInt(),
+            IsHome = package.ReadBool(),
         };
     }
 }

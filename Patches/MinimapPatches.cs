@@ -1,6 +1,10 @@
 using HarmonyLib;
 
-namespace PortalNetwork;
+using PortalNetwork.Home;
+using PortalNetwork.Map;
+using PortalNetwork.UI;
+
+namespace PortalNetwork.Patches;
 
 /// <summary>
 /// While the portal picker is open, a left click picks a portal instead of toggling a pin.
@@ -73,7 +77,7 @@ internal static class Minimap_UpdateMap_Patch
 }
 
 /// <summary>
-/// Every frame: let the picker decide whether the player has walked away.
+/// Every frame: update the picker, the portal overlay and key hint, and check the ping and home portal keys.
 /// </summary>
 [HarmonyPatch(typeof(Minimap), "Update")]
 internal static class Minimap_Update_Patch
@@ -83,5 +87,7 @@ internal static class Minimap_Update_Patch
         PortalMapPicker.Tick();
         PortalMapOverlay.Tick();
         PortalKeyHint.Tick();
+        LocationPing.Tick();
+        HomePortal.Tick();
     }
 }

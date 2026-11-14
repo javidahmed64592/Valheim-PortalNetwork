@@ -1,8 +1,10 @@
 using System.Collections.Generic;
 
+using PortalNetwork.Core;
+
 using UnityEngine;
 
-namespace PortalNetwork;
+namespace PortalNetwork.Portals;
 
 internal enum PortalVisibility
 {
@@ -19,6 +21,7 @@ internal struct PortalInfo
     public Quaternion Rotation;
     public long OwnerId;
     public PortalVisibility Visibility;
+    public bool IsHome;
 }
 
 internal static class PortalRegistry
@@ -27,6 +30,14 @@ internal static class PortalRegistry
     /// Custom key stored on each portal's ZDO, so it persists with the world save.
     /// </summary>
     internal static readonly int VisibilityHash = "PortalNetwork_Visibility".GetStableHashCode();
+
+    /// <summary>
+    /// Server time (ticks) when an admin made this portal the world's home portal, or minus that time when they
+    /// removed it. The latest change across all portals decides: if it set a portal that is still public, that portal
+    /// is home, otherwise there is none. Setting a new home never has to edit the old one, which may be far away with
+    /// nobody to own it.
+    /// </summary>
+    internal static readonly int HomeHash = "PortalNetwork_Home".GetStableHashCode();
 
     /// <summary>
     /// Portals with no stored value (built before the mod, or never changed) are Public.
@@ -55,6 +66,56 @@ internal static class PortalRegistry
             || (who.PlayerId != 0L && info.OwnerId == who.PlayerId);
     }
 
+    /// <summary>Only admins and the host choose the home portal, since it is shared by everyone in the world.</summary>
+    internal static bool CanSetHome(Requester who)
+    {
+        return who.IsAdmin;
+    }
+
+    /// <summary>
+    /// How long to trust a change the server just made over what the portals say. The portal's owner writes the change
+    /// and it takes a moment to reach the server, which would otherwise briefly report the old home portal.
+    /// </summary>
+    private const float ChangeGraceSeconds = 5f;
+
+    private static ZDOID _changedHome = ZDOID.None;
+    private static float _changedAt = float.NegativeInfinity;
+
+    /// <summary>Server-side: the home portal was just set (or removed, with ZDOID.None).</summary>
+    internal static void OnHomeChanged(ZDOID home)
+    {
+        _changedHome = home;
+        _changedAt = Time.unscaledTime;
+    }
+
+    /// <summary>The world's home portal, or ZDOID.None if none is set. Server-side only.</summary>
+    internal static ZDOID FindHome()
+    {
+        if (Time.unscaledTime - _changedAt < ChangeGraceSeconds)
+        {
+            return _changedHome;
+        }
+
+        ZDOID home = ZDOID.None;
+        long latest = 0L;
+        if (ZDOMan.instance == null)
+        {
+            return home;
+        }
+
+        foreach (ZDO zdo in ZDOMan.instance.GetPortalList())
+        {
+            long stamp = zdo.GetLong(HomeHash, 0L);
+            long time = System.Math.Abs(stamp);
+            if (time > latest)
+            {
+                latest = time;
+                home = stamp > 0L && GetVisibility(zdo) == PortalVisibility.Public ? zdo.m_uid : ZDOID.None;
+            }
+        }
+        return home;
+    }
+
     /// <summary>Only meaningful on the server, where ZDOMan holds every portal in the world.</summary>
     internal static List<PortalInfo> GetVisibleTo(Requester who)
     {
@@ -64,15 +125,22 @@ internal static class PortalRegistry
             return result;
         }
 
+        ZDOID home = FindHome();
         foreach (ZDO zdo in ZDOMan.instance.GetPortalList())
         {
             PortalInfo info = ToInfo(zdo);
+            info.IsHome = zdo.m_uid == home;
             if (IsVisibleTo(info, who))
             {
                 result.Add(info);
             }
         }
         return result;
+    }
+
+    private static PortalVisibility GetVisibility(ZDO zdo)
+    {
+        return (PortalVisibility)zdo.GetInt(VisibilityHash, (int)DefaultVisibility);
     }
 
     internal static PortalInfo ToInfo(ZDO zdo)
@@ -85,7 +153,7 @@ internal static class PortalRegistry
             Position = zdo.GetPosition(),
             Rotation = zdo.GetRotation(),
             OwnerId = zdo.GetLong(ZDOVars.s_creator, 0L),
-            Visibility = (PortalVisibility)zdo.GetInt(VisibilityHash, (int)DefaultVisibility),
+            Visibility = GetVisibility(zdo),
         };
     }
 }

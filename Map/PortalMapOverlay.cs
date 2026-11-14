@@ -1,6 +1,11 @@
 using System.Collections.Generic;
 
-namespace PortalNetwork;
+using PortalNetwork.Core;
+using PortalNetwork.Home;
+using PortalNetwork.Network;
+using PortalNetwork.Portals;
+
+namespace PortalNetwork.Map;
 
 /// <summary>
 /// Optional portal icons on the normal map, toggled with a keybind. Unlike the picker, these pins are not clickable.
@@ -8,6 +13,9 @@ namespace PortalNetwork;
 internal static class PortalMapOverlay
 {
     private static readonly List<Minimap.PinData> Pins = [];
+
+    /// <summary>The portal shown by each pin in <see cref="Pins"/>, at the same index.</summary>
+    private static readonly List<ZDOID> PortalIds = [];
     private static bool _enabled;
     private static bool _loaded;
     private static bool _requestPending;
@@ -37,7 +45,7 @@ internal static class PortalMapOverlay
         }
 
         // Applies on both the minimap and the large map.
-        PortalPinStyle.Apply(Pins);
+        PortalPinStyle.Apply(Pins, HomePin());
     }
 
     internal static void Show(List<PortalInfo> portals)
@@ -64,6 +72,7 @@ internal static class PortalMapOverlay
             Minimap.PinData pin = minimap.AddPin(portal.Position, Minimap.PinType.Icon4, label, false, false);
             pin.m_doubleSize = true;
             Pins.Add(pin);
+            PortalIds.Add(portal.Id);
         }
     }
 
@@ -81,5 +90,19 @@ internal static class PortalMapOverlay
             }
         }
         Pins.Clear();
+        PortalIds.Clear();
+    }
+
+    /// <summary>Looked up every frame, so the colour follows when an admin picks a new home portal.</summary>
+    private static Minimap.PinData HomePin()
+    {
+        for (int i = 0; i < Pins.Count; i++)
+        {
+            if (HomePortal.IsHome(PortalIds[i]))
+            {
+                return Pins[i];
+            }
+        }
+        return null;
     }
 }

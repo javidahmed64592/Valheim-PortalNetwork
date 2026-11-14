@@ -1,4 +1,6 @@
-namespace PortalNetwork;
+using Jotunn.Managers;
+
+namespace PortalNetwork.Core;
 
 internal struct Requester(long playerId, bool isAdmin)
 {
@@ -8,6 +10,18 @@ internal struct Requester(long playerId, bool isAdmin)
 
 internal static class PlayerIdentity
 {
+    /// <summary>
+    /// Client-side, for showing or hiding hints: whether the local player is an admin or the host. The server checks
+    /// again whenever it matters. Vanilla's LocalPlayerIsAdminOrHost compares against a copy of the admin list that
+    /// doesn't match players on a crossplay dedicated server, so this uses the status Jotunn gets from the server,
+    /// which the server decides the same way as <see cref="Resolve"/>.
+    /// </summary>
+    internal static bool LocalIsAdmin()
+    {
+        return ZNet.instance != null
+            && (ZNet.instance.IsServer() || SynchronizationManager.Instance.PlayerIsAdmin);
+    }
+
     /// <summary>
     /// Server-side: who sent an RPC, taken from the server's own records instead of anything
     /// the client claims. PlayerId is 0 if the peer has no character yet.

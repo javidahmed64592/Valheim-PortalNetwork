@@ -1,8 +1,14 @@
 using System.Collections.Generic;
 
+using PortalNetwork.Core;
+using PortalNetwork.Home;
+using PortalNetwork.Network;
+using PortalNetwork.Portals;
+using PortalNetwork.UI;
+
 using UnityEngine;
 
-namespace PortalNetwork;
+namespace PortalNetwork.Map;
 
 internal static class PortalMapPicker
 {
@@ -17,6 +23,17 @@ internal static class PortalMapPicker
     private static Vector3 _origin;
     private static readonly List<Entry> Entries = [];
     private static readonly HashSet<Minimap.PinData> PickerPins = [];
+    private static Entry _home;
+    private static ZDOID _entered = ZDOID.None;
+
+    /// <summary>True if the travel home key would do something: there is a home portal and we are not at it.</summary>
+    internal static bool CanTravelHome => IsActive && _home != null;
+
+    /// <summary>True if the set home key would do something for the local player.</summary>
+    internal static bool CanSetHome => IsActive && !_entered.IsNone() && HomePortal.LocalPlayerCanSetHome();
+
+    /// <summary>True if the portal the player is standing at is the home portal.</summary>
+    internal static bool AtHome { get; private set; }
 
     internal static bool IsActive => Entries.Count > 0;
 
@@ -35,6 +52,7 @@ internal static class PortalMapPicker
         {
             if (portal.Id == enteredPortal)
             {
+                AtHome = portal.IsHome;
                 continue; // no point listing the portal you are standing at
             }
 
@@ -47,7 +65,13 @@ internal static class PortalMapPicker
             // save: false keeps these out of the character's saved map data.
             Minimap.PinData pin = minimap.AddPin(portal.Position, Minimap.PinType.Icon4, label, false, false);
             pin.m_doubleSize = true;
-            Entries.Add(new Entry { Pin = pin, Portal = portal });
+            Entry entry = new() { Pin = pin, Portal = portal };
+            Entries.Add(entry);
+            if (portal.IsHome)
+            {
+                _home = entry;
+            }
+
             _ = PickerPins.Add(pin);
         }
 
@@ -61,6 +85,7 @@ internal static class PortalMapPicker
         }
 
         _origin = enteredPosition;
+        _entered = enteredPortal;
 
         minimap.ShowPointOnMap(enteredPosition);
         if (!Minimap.IsOpen())
@@ -147,6 +172,9 @@ internal static class PortalMapPicker
             }
         }
         Entries.Clear();
+        _home = null;
+        _entered = ZDOID.None;
+        AtHome = false;
         PickerPins.Clear(); // RemovePin triggers a vanilla pin refresh, which restores the dimmed pins' colours
     }
 
@@ -167,8 +195,43 @@ internal static class PortalMapPicker
             return;
         }
 
-        PortalPinStyle.Apply(PickerPins);
+        if (!Minimap.InTextInput())
+        {
+            if (CanSetHome && PortalNetworkPlugin._setHomeKey.Value.IsDown())
+            {
+                // The list and pins update when the server announces the new home portal.
+                PortalNetworkRpc.SendSetHomeRequest(_entered, !AtHome);
+            }
+            else if (CanTravelHome && PortalNetworkPlugin._travelHomeKey.Value.IsDown())
+            {
+                Teleport(_home.Portal);
+                return;
+            }
+        }
+
+        PortalPinStyle.Apply(PickerPins, _home?.Pin);
         PortalPinStyle.DimOthers(PickerPins, PortalNetworkPlugin._otherPinOpacity.Value);
+    }
+
+    /// <summary>The server announced a new home portal (or none) while the picker may be open.</summary>
+    internal static void OnHomeChanged(ZDOID home)
+    {
+        if (!IsActive)
+        {
+            return;
+        }
+
+        _home = null;
+        foreach (Entry entry in Entries)
+        {
+            entry.Portal.IsHome = entry.Portal.Id == home;
+            if (entry.Portal.IsHome)
+            {
+                _home = entry;
+            }
+        }
+        AtHome = home == _entered;
+        PortalPickerPanel.SetHome(home);
     }
 
     private static void CloseMap()

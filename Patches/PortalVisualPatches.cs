@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 using HarmonyLib;
 
-namespace PortalNetwork;
+namespace PortalNetwork.Patches;
 
 /// <summary>
 /// Vanilla only lights up a portal when it has a tag-linked partner. PortalNetwork

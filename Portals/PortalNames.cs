@@ -1,6 +1,8 @@
+using PortalNetwork.Core;
+
 using Splatform;
 
-namespace PortalNetwork;
+namespace PortalNetwork.Portals;
 
 internal static class PortalNames
 {
