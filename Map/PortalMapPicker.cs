@@ -22,6 +22,7 @@ internal static class PortalMapPicker
     private static Vector3 _origin;
     private static readonly List<Entry> Entries = [];
     private static readonly HashSet<Minimap.PinData> PickerPins = [];
+    private static Entry _home;
 
     internal static bool IsActive => Entries.Count > 0;
 
@@ -52,7 +53,13 @@ internal static class PortalMapPicker
             // save: false keeps these out of the character's saved map data.
             Minimap.PinData pin = minimap.AddPin(portal.Position, Minimap.PinType.Icon4, label, false, false);
             pin.m_doubleSize = true;
-            Entries.Add(new Entry { Pin = pin, Portal = portal });
+            Entry entry = new() { Pin = pin, Portal = portal };
+            Entries.Add(entry);
+            if (portal.IsHome)
+            {
+                _home = entry;
+            }
+
             _ = PickerPins.Add(pin);
         }
 
@@ -152,6 +159,7 @@ internal static class PortalMapPicker
             }
         }
         Entries.Clear();
+        _home = null;
         PickerPins.Clear(); // RemovePin triggers a vanilla pin refresh, which restores the dimmed pins' colours
     }
 
@@ -172,7 +180,14 @@ internal static class PortalMapPicker
             return;
         }
 
-        PortalPinStyle.Apply(PickerPins);
+        // Nothing happens at the home portal itself, since it is not in the list.
+        if (_home != null && !Minimap.InTextInput() && PortalNetworkPlugin._travelHomeKey.Value.IsDown())
+        {
+            Teleport(_home.Portal);
+            return;
+        }
+
+        PortalPinStyle.Apply(PickerPins, _home?.Pin);
         PortalPinStyle.DimOthers(PickerPins, PortalNetworkPlugin._otherPinOpacity.Value);
     }
 

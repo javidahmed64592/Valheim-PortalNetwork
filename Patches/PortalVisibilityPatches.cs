@@ -3,14 +3,19 @@ using System;
 using HarmonyLib;
 
 using PortalNetwork.Core;
+using PortalNetwork.Home;
+using PortalNetwork.Map;
 using PortalNetwork.Network;
 using PortalNetwork.Portals;
+
+using UnityEngine;
 
 namespace PortalNetwork.Patches;
 
 internal static class PortalOwnership
 {
     internal const string SetVisibilityRpc = "RPC_PortalNetwork_SetVisibility";
+    internal const string SetHomeRpc = "RPC_PortalNetwork_SetHome";
 }
 
 /// <summary>
@@ -28,6 +33,7 @@ internal static class TeleportWorld_Awake_Patch
         }
 
         nview.Register<int>(PortalOwnership.SetVisibilityRpc, (sender, value) => OnSetVisibility(nview, sender, value));
+        nview.Register<long>(PortalOwnership.SetHomeRpc, (sender, stamp) => OnSetHome(nview, sender, stamp));
     }
 
     /// <summary>
@@ -52,6 +58,19 @@ internal static class TeleportWorld_Awake_Patch
         }
 
         nview.GetZDO().Set(PortalRegistry.VisibilityHash, value);
+    }
+
+    /// <summary>Runs on the ZDO's owner, for instructions from the server only. The home portal is always public.</summary>
+    private static void OnSetHome(ZNetView nview, long sender, long stamp)
+    {
+        if (sender != ZRoutedRpc.instance.GetServerPeerID() || !nview.IsValid() || !nview.IsOwner())
+        {
+            return;
+        }
+
+        ZDO zdo = nview.GetZDO();
+        zdo.Set(PortalRegistry.HomeHash, stamp);
+        zdo.Set(PortalRegistry.VisibilityHash, (int)PortalVisibility.Public);
     }
 }
 
@@ -88,8 +107,7 @@ internal static class TeleportWorld_Interact_Patch
 }
 
 /// <summary>
-/// Append the current visibility (and the toggle hint, for the builder) to the hover text.
-/// Append the current visibility (and the toggle hint, for whoever may change it) to the hover text.
+/// Append the current visibility, whether this is the home portal, and the key hints to the hover text.
 /// </summary>
 [HarmonyPatch(typeof(TeleportWorld), nameof(TeleportWorld.GetHoverText))]
 internal static class TeleportWorld_GetHoverText_Patch
@@ -108,18 +126,39 @@ internal static class TeleportWorld_GetHoverText_Patch
             ? "$portalnetwork_visibility_public"
             : "$portalnetwork_visibility_private";
         string text = "\n$portalnetwork_visibility: " + state;
+        bool isHome = HomePortal.IsHome(zdo.m_uid);
+        if (isHome)
+        {
+            text += "\n<color=" + HomeColorHex + ">$portalnetwork_home_portal</color>";
+        }
+        else if (HomePortal.HasHome)
+        {
+            text += Hint(HomePortal.KeyText(PortalNetworkPlugin._travelHomeKey.Value), "$portalnetwork_travel_home_hint");
+        }
 
-        // Cosmetic only: the server makes the real decision when the toggle is pressed.
+        // Cosmetic only: the server makes the real decision when a key is pressed.
         Player local = Player.m_localPlayer;
         if (local != null)
         {
             Requester who = new(local.GetPlayerID(), ZNet.instance.LocalPlayerIsAdminOrHost());
-            if (PortalRegistry.CanChange(info, who))
+            if (!isHome && PortalRegistry.CanChange(info, who))
             {
-                text += "\n[<color=yellow><b>Shift + $KEY_Use</b></color>] $portalnetwork_toggle_hint";
+                text += Hint("Shift + $KEY_Use", "$portalnetwork_toggle_hint");
+            }
+
+            if (!isHome && PortalRegistry.CanSetHome(who))
+            {
+                text += Hint(HomePortal.KeyText(PortalNetworkPlugin._setHomeKey.Value), "$portalnetwork_set_home_hint");
             }
         }
 
         __result += PortalNetworkLocalization.Localize(text);
+    }
+
+    private static string HomeColorHex => "#" + ColorUtility.ToHtmlStringRGB(PortalPinStyle.HomeColor);
+
+    private static string Hint(string keys, string label)
+    {
+        return "\n[<color=yellow><b>" + keys + "</b></color>] " + label;
     }
 }

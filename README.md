@@ -13,6 +13,15 @@ To open the portal interface, walk into any portal.
 
 To show/hide the portal icons on the map and minimap, open the map as normal and press **P** (configurable).
 
+### Home Portal
+
+Each world can have one **home portal**, shared by everyone.
+
+- Admins, and the host of a self-hosted world, look at a portal and press **Shift + H** to make it the home portal. It becomes public, and can't be made private while it is home.
+- Look at any other portal and press **H** to travel straight home. **H** also works while the portal map is open. Nothing happens if you're already at the home portal.
+- The home portal is green on the map and comes first in the portal list, with a house instead of the favourite star.
+- If the home portal is destroyed, the previous home portal becomes home again (if it still exists and is public).
+
 ### Pinging Your Location
 
 Press **P** (configurable) while walking around, with no map or menu open, to ping your location on everyone's map. It's the same ping as clicking on the map, so other players can find you without you opening the map.

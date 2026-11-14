@@ -21,6 +21,7 @@ internal struct PortalInfo
     public Quaternion Rotation;
     public long OwnerId;
     public PortalVisibility Visibility;
+    public bool IsHome;
 }
 
 internal static class PortalRegistry
@@ -29,6 +30,13 @@ internal static class PortalRegistry
     /// Custom key stored on each portal's ZDO, so it persists with the world save.
     /// </summary>
     internal static readonly int VisibilityHash = "PortalNetwork_Visibility".GetStableHashCode();
+
+    /// <summary>
+    /// Server time (ticks) when an admin made this portal the world's home portal. The home portal is the public
+    /// portal with the latest time, so setting a new home never has to edit the old one, which may be far away with
+    /// nobody to own it.
+    /// </summary>
+    internal static readonly int HomeHash = "PortalNetwork_Home".GetStableHashCode();
 
     /// <summary>
     /// Portals with no stored value (built before the mod, or never changed) are Public.
@@ -57,6 +65,34 @@ internal static class PortalRegistry
             || (who.PlayerId != 0L && info.OwnerId == who.PlayerId);
     }
 
+    /// <summary>Only admins and the host choose the home portal, since it is shared by everyone in the world.</summary>
+    internal static bool CanSetHome(Requester who)
+    {
+        return who.IsAdmin;
+    }
+
+    /// <summary>The world's home portal, or ZDOID.None if none is set. Server-side only.</summary>
+    internal static ZDOID FindHome()
+    {
+        ZDOID home = ZDOID.None;
+        long latest = 0L;
+        if (ZDOMan.instance == null)
+        {
+            return home;
+        }
+
+        foreach (ZDO zdo in ZDOMan.instance.GetPortalList())
+        {
+            long stamp = zdo.GetLong(HomeHash, 0L);
+            if (stamp > latest && GetVisibility(zdo) == PortalVisibility.Public)
+            {
+                latest = stamp;
+                home = zdo.m_uid;
+            }
+        }
+        return home;
+    }
+
     /// <summary>Only meaningful on the server, where ZDOMan holds every portal in the world.</summary>
     internal static List<PortalInfo> GetVisibleTo(Requester who)
     {
@@ -66,15 +102,22 @@ internal static class PortalRegistry
             return result;
         }
 
+        ZDOID home = FindHome();
         foreach (ZDO zdo in ZDOMan.instance.GetPortalList())
         {
             PortalInfo info = ToInfo(zdo);
+            info.IsHome = zdo.m_uid == home;
             if (IsVisibleTo(info, who))
             {
                 result.Add(info);
             }
         }
         return result;
+    }
+
+    private static PortalVisibility GetVisibility(ZDO zdo)
+    {
+        return (PortalVisibility)zdo.GetInt(VisibilityHash, (int)DefaultVisibility);
     }
 
     internal static PortalInfo ToInfo(ZDO zdo)
@@ -87,7 +130,7 @@ internal static class PortalRegistry
             Position = zdo.GetPosition(),
             Rotation = zdo.GetRotation(),
             OwnerId = zdo.GetLong(ZDOVars.s_creator, 0L),
-            Visibility = (PortalVisibility)zdo.GetInt(VisibilityHash, (int)DefaultVisibility),
+            Visibility = GetVisibility(zdo),
         };
     }
 }

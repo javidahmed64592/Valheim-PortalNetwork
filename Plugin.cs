@@ -26,6 +26,8 @@ public class PortalNetworkPlugin : BaseUnityPlugin
     internal static ManualLogSource _log;
     internal static ConfigEntry<KeyboardShortcut> _toggleKey;
     internal static ConfigEntry<KeyboardShortcut> _pingKey;
+    internal static ConfigEntry<KeyboardShortcut> _travelHomeKey;
+    internal static ConfigEntry<KeyboardShortcut> _setHomeKey;
     internal static ConfigEntry<float> _otherPinOpacity;
     internal static ConfigEntry<float> _playerIconTeleportSeconds;
     private Harmony _harmony;
@@ -43,6 +45,16 @@ public class PortalNetworkPlugin : BaseUnityPlugin
             "PingLocation",
             new KeyboardShortcut(KeyCode.P),
             "Press while no map or menu is open to ping your location on everyone's map.");
+        _travelHomeKey = Config.Bind(
+            "Home",
+            "TravelHomeKey",
+            new KeyboardShortcut(KeyCode.H),
+            "Press while looking at a portal, or with the portal map open, to travel to the home portal.");
+        _setHomeKey = Config.Bind(
+            "Home",
+            "SetHomeKey",
+            new KeyboardShortcut(KeyCode.H, KeyCode.LeftShift),
+            "Press while looking at a portal to make it the world's home portal (admins and the host only).");
         _otherPinOpacity = Config.Bind(
             "Map",
             "PickerOtherIconOpacity",

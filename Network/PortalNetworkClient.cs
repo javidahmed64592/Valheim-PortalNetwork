@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 
+using PortalNetwork.Home;
 using PortalNetwork.Map;
 using PortalNetwork.Portals;
 
@@ -65,6 +66,21 @@ internal static class PortalNetworkClient
         PortalNetworkRpc.SendListRequest();
     }
 
+    /// <summary>The player pressed the home key at the portal <paramref name="fromPortal"/>.</summary>
+    internal static void RequestHomeTeleport(ZDOID fromPortal, Vector3 fromPosition)
+    {
+        if (Time.unscaledTime - _lastRequestTime < RequestCooldownSeconds)
+        {
+            return;
+        }
+
+        _lastRequestTime = Time.unscaledTime;
+
+        _enteredPortal = fromPortal;
+        _enteredPosition = fromPosition;
+        PortalNetworkRpc.SendHomeTeleportRequest(fromPortal);
+    }
+
     internal static void RequestOverlayList()
     {
         PendingRequests.Enqueue(true);
@@ -80,6 +96,7 @@ internal static class PortalNetworkClient
         }
 
         PortalNetworkPlugin._log.LogDebug($"Client: received {portals.Count} portal(s)");
+        HomePortal.OnListReceived(portals);
         if (forOverlay)
         {
             PortalMapOverlay.Show(portals);

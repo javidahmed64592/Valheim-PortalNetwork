@@ -15,8 +15,9 @@ namespace PortalNetwork.UI;
 
 /// <summary>
 /// A list of reachable portals shown on the left of the large map while the picker is open.
-/// Each row has a favourite star, the portal's name and biome (click to teleport) and its distance.
-/// The portal the player is standing at comes first (not clickable), then favourites, then the rest.
+/// Each row has a favourite star (a green house for the home portal), the portal's name and biome (click to teleport)
+/// and its distance. The home portal comes first, then the portal the player is standing at (not clickable), then
+/// favourites, then the rest.
 /// Above the list: a "go back" button for the last trip.
 /// </summary>
 internal static class PortalPickerPanel
@@ -42,6 +43,7 @@ internal static class PortalPickerPanel
     private static ScrollRect _scroll;
     private static Text _emptyText;
     private static Sprite _starSprite;
+    private static Sprite _homeSprite;
 
     private static readonly List<PortalInfo> Portals = [];
     private static readonly List<GameObject> Rows = [];
@@ -214,7 +216,8 @@ internal static class PortalPickerPanel
         IEnumerable<(PortalInfo Portal, bool Current, bool Favourite, string Label)> rows = Portals
             .Select(p => (Portal: p, Current: p.Id == _current,
                 Favourite: favourites.Contains(PortalFavourites.Key(p.Position)), Label: Label(p)))
-            .OrderByDescending(r => r.Current)
+            .OrderByDescending(r => r.Portal.IsHome)
+            .ThenByDescending(r => r.Current)
             .ThenByDescending(r => r.Favourite)
             .ThenBy(r => r.Label, System.StringComparer.CurrentCultureIgnoreCase);
 
@@ -274,21 +277,36 @@ internal static class PortalPickerPanel
         SetControl(layout);
         AddLayout(row, height: RowHeight);
 
-        // Favourite star
-        GameObject star = new("Star", typeof(RectTransform), typeof(Image), typeof(Button));
-        star.transform.SetParent(row.transform, false);
-        AddLayout(star, width: StarSize, height: StarSize);
-        Image starImage = star.GetComponent<Image>();
-        starImage.sprite = StarSprite();
-        starImage.preserveAspect = true;
-        starImage.color = favourite ? StarOn : StarOff;
-        Button starButton = star.GetComponent<Button>();
-        starButton.transition = Selectable.Transition.None;
-        starButton.onClick.AddListener(() =>
+        if (portal.IsHome)
         {
-            PortalFavourites.SetFavourite(portal, !favourite);
-            Rebuild(); // re-sort so favourites move to the top straight away
-        });
+            // Home portal: a green house instead of the favourite star, since it is always at the top anyway.
+            GameObject home = new("Home", typeof(RectTransform), typeof(Image));
+            home.transform.SetParent(row.transform, false);
+            AddLayout(home, width: StarSize, height: StarSize);
+            Image homeImage = home.GetComponent<Image>();
+            homeImage.sprite = HomeSprite();
+            homeImage.preserveAspect = true;
+            homeImage.color = PortalPinStyle.HomeColor;
+            homeImage.raycastTarget = false;
+        }
+        else
+        {
+            // Favourite star
+            GameObject star = new("Star", typeof(RectTransform), typeof(Image), typeof(Button));
+            star.transform.SetParent(row.transform, false);
+            AddLayout(star, width: StarSize, height: StarSize);
+            Image starImage = star.GetComponent<Image>();
+            starImage.sprite = StarSprite();
+            starImage.preserveAspect = true;
+            starImage.color = favourite ? StarOn : StarOff;
+            Button starButton = star.GetComponent<Button>();
+            starButton.transition = Selectable.Transition.None;
+            starButton.onClick.AddListener(() =>
+            {
+                PortalFavourites.SetFavourite(portal, !favourite);
+                Rebuild(); // re-sort so favourites move to the top straight away
+            });
+        }
 
         // Name and biome: click to teleport (the portal you are standing at is shown but disabled)
         GameObject name = gui.CreateButton(label, row.transform, Vector2.zero, Vector2.zero, Vector2.zero);
@@ -413,6 +431,8 @@ internal static class PortalPickerPanel
         return string.IsNullOrEmpty(text) ? text : PortalNetworkLocalization.Localize(text);
     }
 
+    private const int SpriteSize = 64;
+
     /// <summary>A white five-pointed star drawn at runtime (tinted per row), so no asset bundle is needed.</summary>
     private static Sprite StarSprite()
     {
@@ -421,16 +441,49 @@ internal static class PortalPickerPanel
             return _starSprite;
         }
 
-        const int size = 64;
-        const int samples = 4;
-        Vector2 centre = new(size / 2f, size / 2f);
+        Vector2 centre = new(SpriteSize / 2f, SpriteSize / 2f);
         Vector2[] points = new Vector2[10];
         for (int i = 0; i < points.Length; i++)
         {
             float angle = (90f + (i * 36f)) * Mathf.Deg2Rad;
-            float radius = i % 2 == 0 ? size * 0.48f : size * 0.2f;
+            float radius = i % 2 == 0 ? SpriteSize * 0.48f : SpriteSize * 0.2f;
             points[i] = centre + (new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius);
         }
+
+        _starSprite = PolygonSprite(points);
+        return _starSprite;
+    }
+
+    /// <summary>A white house (roof and walls, with a door cut out), drawn at runtime like the star.</summary>
+    private static Sprite HomeSprite()
+    {
+        if (_homeSprite != null)
+        {
+            return _homeSprite;
+        }
+
+        // Outline in 0..1 units, counter-clockwise from the bottom-left corner of the walls.
+        Vector2[] outline =
+        [
+            new(0.18f, 0.04f), new(0.42f, 0.04f), new(0.42f, 0.32f), new(0.58f, 0.32f), new(0.58f, 0.04f),
+            new(0.82f, 0.04f), new(0.82f, 0.5f), new(0.96f, 0.5f), new(0.5f, 0.94f), new(0.04f, 0.5f),
+            new(0.18f, 0.5f),
+        ];
+        Vector2[] points = new Vector2[outline.Length];
+        for (int i = 0; i < outline.Length; i++)
+        {
+            points[i] = outline[i] * SpriteSize;
+        }
+
+        _homeSprite = PolygonSprite(points);
+        return _homeSprite;
+    }
+
+    /// <summary>A white, antialiased filled polygon on a transparent square texture.</summary>
+    private static Sprite PolygonSprite(Vector2[] points)
+    {
+        const int size = SpriteSize;
+        const int samples = 4;
 
         Texture2D texture = new(size, size, TextureFormat.RGBA32, false)
         {
@@ -462,9 +515,9 @@ internal static class PortalPickerPanel
         texture.SetPixels32(pixels);
         texture.Apply();
 
-        _starSprite = Sprite.Create(texture, new Rect(0f, 0f, size, size), new Vector2(0.5f, 0.5f));
-        _starSprite.hideFlags = HideFlags.HideAndDontSave;
-        return _starSprite;
+        Sprite sprite = Sprite.Create(texture, new Rect(0f, 0f, size, size), new Vector2(0.5f, 0.5f));
+        sprite.hideFlags = HideFlags.HideAndDontSave;
+        return sprite;
     }
 
     private static bool InPolygon(Vector2 point, Vector2[] polygon)

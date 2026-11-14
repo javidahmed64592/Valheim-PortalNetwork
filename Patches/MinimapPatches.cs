@@ -1,5 +1,6 @@
 using HarmonyLib;
 
+using PortalNetwork.Home;
 using PortalNetwork.Map;
 using PortalNetwork.UI;
 
@@ -76,7 +77,7 @@ internal static class Minimap_UpdateMap_Patch
 }
 
 /// <summary>
-/// Every frame: update the picker, the portal overlay and key hint, and check the ping key.
+/// Every frame: update the picker, the portal overlay and key hint, and check the ping and home portal keys.
 /// </summary>
 [HarmonyPatch(typeof(Minimap), "Update")]
 internal static class Minimap_Update_Patch
@@ -87,5 +88,6 @@ internal static class Minimap_Update_Patch
         PortalMapOverlay.Tick();
         PortalKeyHint.Tick();
         LocationPing.Tick();
+        HomePortal.Tick();
     }
 }
