@@ -21,10 +21,10 @@ internal static class PortalPinStyle
     private const string RingName = "PortalNetwork_FavouriteRing";
 
     /// <summary>How far the ring extends past each side of the icon, as a fraction of the icon's size.</summary>
-    private const float RingMargin = 0.15f;
+    private const float RingMargin = 0.10f;
 
     /// <summary>The ring's thickness, as a fraction of the ring image's size.</summary>
-    private const float RingThickness = 0.08f;
+    private const float RingThickness = 0.04f;
 
     private static Sprite _ringSprite;
 
