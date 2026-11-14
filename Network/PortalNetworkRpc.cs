@@ -206,7 +206,9 @@ internal static class PortalNetworkRpc
         // Removing records the time as a negative number, so it still counts as the latest change.
         long time = ZNet.instance.GetTime().Ticks;
         ZRoutedRpc.instance.InvokeRoutedRPC(owner, zdo.m_uid, PortalOwnership.SetHomeRpc, home ? time : -time);
-        SendHome(ZRoutedRpc.Everybody, home ? portalId : ZDOID.None);
+        ZDOID newHome = home ? portalId : ZDOID.None;
+        PortalRegistry.OnHomeChanged(newHome);
+        AnnounceHome(newHome);
         SendNotice(sender, home ? "$portalnetwork_home_set" : "$portalnetwork_home_removed");
     }
 
@@ -214,6 +216,19 @@ internal static class PortalNetworkRpc
     {
         SendHome(sender, PortalRegistry.FindHome());
         yield break;
+    }
+
+    /// <summary>
+    /// Tells every client. Jotunn only sends "everybody" packages to other peers, so the host's own client is told
+    /// separately; a dedicated server has no player to tell.
+    /// </summary>
+    private static void AnnounceHome(ZDOID home)
+    {
+        SendHome(ZRoutedRpc.Everybody, home);
+        if (!ZNet.instance.IsDedicated())
+        {
+            SendHome(ZRoutedRpc.instance.m_id, home);
+        }
     }
 
     private static void SendHome(long peer, ZDOID home)

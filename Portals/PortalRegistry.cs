@@ -72,9 +72,30 @@ internal static class PortalRegistry
         return who.IsAdmin;
     }
 
+    /// <summary>
+    /// How long to trust a change the server just made over what the portals say. The portal's owner writes the change
+    /// and it takes a moment to reach the server, which would otherwise briefly report the old home portal.
+    /// </summary>
+    private const float ChangeGraceSeconds = 5f;
+
+    private static ZDOID _changedHome = ZDOID.None;
+    private static float _changedAt = float.NegativeInfinity;
+
+    /// <summary>Server-side: the home portal was just set (or removed, with ZDOID.None).</summary>
+    internal static void OnHomeChanged(ZDOID home)
+    {
+        _changedHome = home;
+        _changedAt = Time.unscaledTime;
+    }
+
     /// <summary>The world's home portal, or ZDOID.None if none is set. Server-side only.</summary>
     internal static ZDOID FindHome()
     {
+        if (Time.unscaledTime - _changedAt < ChangeGraceSeconds)
+        {
+            return _changedHome;
+        }
+
         ZDOID home = ZDOID.None;
         long latest = 0L;
         if (ZDOMan.instance == null)
