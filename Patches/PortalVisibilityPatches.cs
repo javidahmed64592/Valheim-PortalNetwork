@@ -60,7 +60,10 @@ internal static class TeleportWorld_Awake_Patch
         nview.GetZDO().Set(PortalRegistry.VisibilityHash, value);
     }
 
-    /// <summary>Runs on the ZDO's owner, for instructions from the server only. The home portal is always public.</summary>
+    /// <summary>
+    /// Runs on the ZDO's owner, for instructions from the server only. A positive stamp makes the portal home, and the
+    /// home portal is always public; a negative one records that it stopped being home.
+    /// </summary>
     private static void OnSetHome(ZNetView nview, long sender, long stamp)
     {
         if (sender != ZRoutedRpc.instance.GetServerPeerID() || !nview.IsValid() || !nview.IsOwner())
@@ -70,7 +73,10 @@ internal static class TeleportWorld_Awake_Patch
 
         ZDO zdo = nview.GetZDO();
         zdo.Set(PortalRegistry.HomeHash, stamp);
-        zdo.Set(PortalRegistry.VisibilityHash, (int)PortalVisibility.Public);
+        if (stamp > 0L)
+        {
+            zdo.Set(PortalRegistry.VisibilityHash, (int)PortalVisibility.Public);
+        }
     }
 }
 
@@ -146,9 +152,10 @@ internal static class TeleportWorld_GetHoverText_Patch
                 text += Hint("Shift + $KEY_Use", "$portalnetwork_toggle_hint");
             }
 
-            if (!isHome && PortalRegistry.CanSetHome(who))
+            if (PortalRegistry.CanSetHome(who))
             {
-                text += Hint(HomePortal.KeyText(PortalNetworkPlugin._setHomeKey.Value), "$portalnetwork_set_home_hint");
+                text += Hint(HomePortal.KeyText(PortalNetworkPlugin._setHomeKey.Value),
+                    isHome ? "$portalnetwork_remove_home_hint" : "$portalnetwork_set_home_hint");
             }
         }
 

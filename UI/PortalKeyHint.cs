@@ -15,12 +15,24 @@ using UnityEngine.UI;
 namespace PortalNetwork.UI;
 
 /// <summary>
-/// Adds a "Toggle portals" entry for the portal icon key to the large map's key hints, built from clones
-/// of a vanilla hint (the label) and a boxed key like the build hints use. It follows the configured key.
+/// Adds our entries to the large map's key hints, built from clones of a vanilla hint (the label) and a boxed key like
+/// the build hints use: "Toggle portals" on the normal map, and the home portal keys in the portal picker. Each entry
+/// follows its configured key and is only shown when pressing it would do something.
 /// </summary>
 internal static class PortalKeyHint
 {
-    private const string ItemName = "PortalNetwork_TogglePortalIcons";
+    private sealed class Hint(string name, System.Func<KeyboardShortcut> key, System.Func<string> label, System.Func<bool> show)
+    {
+        public readonly string Name = name;
+        public readonly System.Func<KeyboardShortcut> Key = key;
+        public readonly System.Func<string> Label = label;
+        public readonly System.Func<bool> Show = show;
+        public GameObject Item;
+
+        /// <summary>The key and label the item was last built for, so it is rebuilt when either changes.</summary>
+        public string BuiltFor;
+    }
+
     private const float KeyBoxMinWidth = 30f;
     /// <summary>
     /// left, right, top, bottom
@@ -28,8 +40,23 @@ internal static class PortalKeyHint
     private static readonly Regex WordBreak = new("(?<=[a-z0-9])(?=[A-Z])");
     private static readonly Vector4 KeyBoxPadding = new(8f, 8f, 4f, 4f);
 
-    private static GameObject _item;
-    private static string _builtFor;
+    private static readonly Hint[] Hints =
+    [
+        // The picker has its own pins and the toggle does nothing while it is open.
+        new("PortalNetwork_TogglePortalIcons",
+            () => PortalNetworkPlugin._toggleKey.Value,
+            () => "$portalnetwork_toggle_icons_hint",
+            () => !PortalMapPicker.IsActive),
+        new("PortalNetwork_TravelHome",
+            () => PortalNetworkPlugin._travelHomeKey.Value,
+            () => "$portalnetwork_travel_home_hint",
+            () => PortalMapPicker.CanTravelHome),
+        new("PortalNetwork_SetHome",
+            () => PortalNetworkPlugin._setHomeKey.Value,
+            () => PortalMapPicker.AtHome ? "$portalnetwork_remove_home_hint" : "$portalnetwork_set_home_hint",
+            () => PortalMapPicker.CanSetHome),
+    ];
+
     private static bool _failed;
     private static Sprite _keySprite;
 
@@ -38,8 +65,8 @@ internal static class PortalKeyHint
     {
         if (!Minimap.IsOpen())
         {
-            // The map's UI persists between openings, so keep the item; only a destroyed HUD resets it.
-            if (!ReferenceEquals(_item, null) && _item == null)
+            // The map's UI persists between openings, so keep the items; only a destroyed HUD resets them.
+            if (!ReferenceEquals(Hints[0].Item, null) && Hints[0].Item == null)
             {
                 Reset();
             }
@@ -55,23 +82,31 @@ internal static class PortalKeyHint
             return;
         }
 
-        if (_item == null && (_failed || !Create(keyboardHints)))
+        if (Hints[0].Item == null && (_failed || !Create(keyboardHints)))
         {
             return;
         }
 
-        // The picker has its own pins and the toggle does nothing while it is open.
-        bool show = !PortalMapPicker.IsActive;
-        if (_item.activeSelf != show)
+        bool changed = false;
+        foreach (Hint hint in Hints)
         {
-            _item.SetActive(show);
-            LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)keyboardHints);
+            bool show = hint.Show();
+            if (hint.Item.activeSelf != show)
+            {
+                hint.Item.SetActive(show);
+                changed = true;
+            }
+
+            // The key is configurable and some labels change, so rebuild the contents if either did.
+            if (show && hint.BuiltFor != BuildKey(hint))
+            {
+                BuildContents(hint);
+                changed = true;
+            }
         }
 
-        // The key is configurable, so rebuild the key boxes if it changed.
-        if (_builtFor != PortalNetworkPlugin._toggleKey.Value.ToString())
+        if (changed)
         {
-            BuildContents();
             LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)keyboardHints);
         }
     }
@@ -82,28 +117,34 @@ internal static class PortalKeyHint
         if (template == null || template.Find("Label") == null)
         {
             _failed = true;
-            PortalNetworkPlugin._log.LogWarning("Vanilla map key hints layout not as expected, not adding the portal icon key hint.");
+            PortalNetworkPlugin._log.LogWarning("Vanilla map key hints layout not as expected, not adding the portal key hints.");
             return false;
         }
 
-        _item = Object.Instantiate(template.gameObject, keyboardHints, false);
-        _item.name = ItemName;
-        _item.SetActive(true);
-
-        BuildContents();
-        LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)keyboardHints);
+        foreach (Hint hint in Hints)
+        {
+            hint.Item = Object.Instantiate(template.gameObject, keyboardHints, false);
+            hint.Item.name = hint.Name;
+            hint.Item.SetActive(false);
+            hint.BuiltFor = null;
+        }
         return true;
+    }
+
+    private static string BuildKey(Hint hint)
+    {
+        return hint.Key().ToString() + "|" + hint.Label();
     }
 
     /// <summary>
     /// Label followed by a boxed key per part of the configured shortcut, e.g. [Left Ctrl] + [P].
     /// </summary>
-    private static void BuildContents()
+    private static void BuildContents(Hint hint)
     {
-        KeyboardShortcut shortcut = PortalNetworkPlugin._toggleKey.Value;
-        _builtFor = shortcut.ToString();
+        KeyboardShortcut shortcut = hint.Key();
+        hint.BuiltFor = BuildKey(hint);
 
-        Transform item = _item.transform;
+        Transform item = hint.Item.transform;
         Transform label = item.Find("Label");
 
         // Remove everything but the label (e.g. the mouse icon, or the keys from a previous build).
@@ -116,7 +157,7 @@ internal static class PortalKeyHint
             }
         }
 
-        label.GetComponent<TextMeshProUGUI>().text = PortalNetworkLocalization.Localize("$portalnetwork_toggle_icons_hint");
+        label.GetComponent<TextMeshProUGUI>().text = PortalNetworkLocalization.Localize(hint.Label());
 
         List<string> keys = [.. shortcut.Modifiers.Select(KeyName)];
         keys.Add(KeyName(shortcut.MainKey));
@@ -214,8 +255,11 @@ internal static class PortalKeyHint
 
     private static void Reset()
     {
-        _item = null;
-        _builtFor = null;
+        foreach (Hint hint in Hints)
+        {
+            hint.Item = null;
+            hint.BuiltFor = null;
+        }
         _failed = false;
     }
 }

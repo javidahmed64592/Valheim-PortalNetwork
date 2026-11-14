@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 using BepInEx.Configuration;
 
+using PortalNetwork.Map;
 using PortalNetwork.Network;
 using PortalNetwork.Portals;
 
@@ -12,8 +13,9 @@ namespace PortalNetwork.Home;
 
 /// <summary>
 /// The world's home portal, as seen by this client, and the keys used while looking at a portal: one travels to the
-/// home portal, the other (admins and the host only) makes the portal the new home. The server stores the home portal
-/// and makes every decision; this only remembers which portal it is for the hover text, the map and the portal list.
+/// home portal, the other (admins and the host only) makes the portal the new home, or stops it being home. The server
+/// stores the home portal and makes every decision; this only remembers which portal it is for the hover text, the map
+/// and the portal list.
 /// </summary>
 internal static class HomePortal
 {
@@ -33,7 +35,19 @@ internal static class HomePortal
 
     internal static void OnHomeReceived(ZDOID home)
     {
+        if (home == _home)
+        {
+            return;
+        }
+
         _home = home;
+        PortalMapPicker.OnHomeChanged(home);
+    }
+
+    /// <summary>Admins and the host may set and remove the home portal. The server checks again.</summary>
+    internal static bool LocalPlayerCanSetHome()
+    {
+        return ZNet.instance != null && ZNet.instance.LocalPlayerIsAdminOrHost();
     }
 
     /// <summary>Every list includes the home portal, since it is always public.</summary>
@@ -88,7 +102,7 @@ internal static class HomePortal
 
         if (PortalNetworkPlugin._setHomeKey.Value.IsDown())
         {
-            PortalNetworkRpc.SendSetHomeRequest(zdo.m_uid);
+            PortalNetworkRpc.SendSetHomeRequest(zdo.m_uid, !IsHome(zdo.m_uid));
         }
         else if (PortalNetworkPlugin._travelHomeKey.Value.IsDown()
             && !IsHome(zdo.m_uid)

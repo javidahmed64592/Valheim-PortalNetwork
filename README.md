@@ -17,10 +17,11 @@ To show/hide the portal icons on the map and minimap, open the map as normal and
 
 Each world can have one **home portal**, shared by everyone.
 
-- Admins, and the host of a self-hosted world, look at a portal and press **Shift + H** to make it the home portal. It becomes public, and can't be made private while it is home.
-- Look at any other portal and press **H** to travel straight home. **H** also works while the portal map is open. Nothing happens if you're already at the home portal.
+- Admins, and the host of a self-hosted world, press **Shift + H** while looking at a portal, or with the portal map open, to make that portal the home portal. It becomes public, and can't be made private while it is home. Press **Shift + H** at the home portal to stop it being home.
+- Press **H** while looking at any other portal, or with the portal map open, to travel straight home. Nothing happens if you're already at the home portal.
+- The portal map's key hints show these keys whenever pressing them would do something.
 - The home portal is green on the map and comes first in the portal list, with a house instead of the favourite star.
-- If the home portal is destroyed, the previous home portal becomes home again (if it still exists and is public).
+- If the home portal is destroyed, the previous home portal becomes home again, unless it was removed as home or made private.
 
 ### Pinging Your Location
 

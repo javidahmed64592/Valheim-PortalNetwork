@@ -32,8 +32,9 @@ internal static class PortalRegistry
     internal static readonly int VisibilityHash = "PortalNetwork_Visibility".GetStableHashCode();
 
     /// <summary>
-    /// Server time (ticks) when an admin made this portal the world's home portal. The home portal is the public
-    /// portal with the latest time, so setting a new home never has to edit the old one, which may be far away with
+    /// Server time (ticks) when an admin made this portal the world's home portal, or minus that time when they
+    /// removed it. The latest change across all portals decides: if it set a portal that is still public, that portal
+    /// is home, otherwise there is none. Setting a new home never has to edit the old one, which may be far away with
     /// nobody to own it.
     /// </summary>
     internal static readonly int HomeHash = "PortalNetwork_Home".GetStableHashCode();
@@ -84,10 +85,11 @@ internal static class PortalRegistry
         foreach (ZDO zdo in ZDOMan.instance.GetPortalList())
         {
             long stamp = zdo.GetLong(HomeHash, 0L);
-            if (stamp > latest && GetVisibility(zdo) == PortalVisibility.Public)
+            long time = System.Math.Abs(stamp);
+            if (time > latest)
             {
-                latest = stamp;
-                home = zdo.m_uid;
+                latest = time;
+                home = stamp > 0L && GetVisibility(zdo) == PortalVisibility.Public ? zdo.m_uid : ZDOID.None;
             }
         }
         return home;

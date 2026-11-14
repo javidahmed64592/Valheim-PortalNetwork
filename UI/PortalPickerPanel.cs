@@ -83,6 +83,23 @@ internal static class PortalPickerPanel
         _scroll.verticalNormalizedPosition = 1f;
     }
 
+    /// <summary>Moves the home portal (or none) and redraws the list, keeping the scroll position.</summary>
+    internal static void SetHome(ZDOID home)
+    {
+        if (_panel == null || !_panel.activeSelf)
+        {
+            return;
+        }
+
+        for (int i = 0; i < Portals.Count; i++)
+        {
+            PortalInfo portal = Portals[i];
+            portal.IsHome = portal.Id == home;
+            Portals[i] = portal;
+        }
+        Rebuild();
+    }
+
     internal static void Hide()
     {
         Portals.Clear();

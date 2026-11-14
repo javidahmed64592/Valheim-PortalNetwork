@@ -75,10 +75,12 @@ internal static class PortalNetworkRpc
         _visibilityRequest.SendPackage(ServerId, package);
     }
 
-    internal static void SendSetHomeRequest(ZDOID portalId)
+    /// <summary>Makes the portal the home portal, or with <paramref name="home"/> false, stops it being home.</summary>
+    internal static void SendSetHomeRequest(ZDOID portalId, bool home)
     {
         ZPackage package = new();
         package.Write(portalId);
+        package.Write(home);
         _setHomeRequest.SendPackage(ServerId, package);
     }
 
@@ -171,6 +173,7 @@ internal static class PortalNetworkRpc
     private static IEnumerator OnSetHomeRequest(long sender, ZPackage package)
     {
         ZDOID portalId = package.ReadZDOID();
+        bool home = package.ReadBool();
         Requester who = PlayerIdentity.Resolve(sender);
 
         if (!PortalRegistry.CanSetHome(who))
@@ -185,9 +188,10 @@ internal static class PortalNetworkRpc
             yield break;
         }
 
-        if (PortalRegistry.FindHome() == portalId)
+        bool isHome = PortalRegistry.FindHome() == portalId;
+        if (home == isHome)
         {
-            SendNotice(sender, "$portalnetwork_already_home");
+            SendNotice(sender, home ? "$portalnetwork_already_home" : "$portalnetwork_not_home");
             yield break;
         }
 
@@ -199,9 +203,11 @@ internal static class PortalNetworkRpc
             yield break;
         }
 
-        ZRoutedRpc.instance.InvokeRoutedRPC(owner, zdo.m_uid, PortalOwnership.SetHomeRpc, ZNet.instance.GetTime().Ticks);
-        SendHome(ZRoutedRpc.Everybody, portalId);
-        SendNotice(sender, "$portalnetwork_home_set");
+        // Removing records the time as a negative number, so it still counts as the latest change.
+        long time = ZNet.instance.GetTime().Ticks;
+        ZRoutedRpc.instance.InvokeRoutedRPC(owner, zdo.m_uid, PortalOwnership.SetHomeRpc, home ? time : -time);
+        SendHome(ZRoutedRpc.Everybody, home ? portalId : ZDOID.None);
+        SendNotice(sender, home ? "$portalnetwork_home_set" : "$portalnetwork_home_removed");
     }
 
     private static IEnumerator OnHomeRequest(long sender, ZPackage package)
