@@ -6,6 +6,7 @@ using Jotunn.Managers;
 
 using PortalNetwork.Core;
 using PortalNetwork.Map;
+using PortalNetwork.Network;
 using PortalNetwork.Portals;
 
 using UnityEngine;
@@ -15,19 +16,20 @@ namespace PortalNetwork.UI;
 
 /// <summary>
 /// A list of reachable portals shown on the left of the large map while the picker is open.
-/// Each row has a favourite star (a green house for the home portal), the portal's name and biome (click to teleport)
-/// and its distance. The home portal comes first, then the portal the player is standing at (not clickable), then
-/// favourites, then the rest.
-/// Above the list: a "go back" button for the last trip.
+/// Each row has a favourite star (a green house for the home portal), the portal's name and biome (click to teleport),
+/// its distance, a rename button and a name lock. The home portal comes first, then the portal the player is standing
+/// at (not clickable), then favourites, then the rest.
+/// Above the list: a "go back" button for the last trip, and a search box that filters the list by name or biome.
 /// </summary>
 internal static class PortalPickerPanel
 {
-    private const float PanelWidth = 380f;
+    private const float PanelWidth = 440f;
     private const float PanelHeight = 600f;
     private const float PanelMarginLeft = 40f;
     private const float RowHeight = 34f;
     private const float StarSize = 26f;
     private const float DistanceWidth = 64f;
+    private const float IconButtonSize = 22f;
     private const int Padding = 16;
     /// <summary>Used if the crafting list cannot be found; its value at the time of writing.</summary>
     private const float FallbackScrollSensitivity = 3000f;
@@ -35,6 +37,8 @@ internal static class PortalPickerPanel
     private static Color StarOn => PortalPinStyle.FavouriteColor;
     private static readonly Color StarOff = new(1f, 1f, 1f, 0.25f);
     private static readonly Color ListBackground = new(0f, 0f, 0f, 0.35f);
+    private static readonly Color IconIdle = new(1f, 1f, 1f, 0.6f);
+    private static readonly Color LockOff = new(1f, 1f, 1f, 0.2f);
 
     private static GameObject _panel;
     private static Button _goBackButton;
@@ -44,11 +48,17 @@ internal static class PortalPickerPanel
     private static Text _emptyText;
     private static Sprite _starSprite;
     private static Sprite _homeSprite;
+    private static Sprite _pencilSprite;
+    private static Sprite _lockSprite;
+    private static InputField _search;
 
     private static readonly List<PortalInfo> Portals = [];
     private static readonly List<GameObject> Rows = [];
     private static Vector3 _origin;
     private static ZDOID _current;
+
+    /// <summary>True while the search box has the keyboard, so the map and the portal keys leave the typing alone.</summary>
+    internal static bool SearchFocused => _search != null && _search.isFocused && _panel != null && _panel.activeInHierarchy;
 
     internal static bool IsPointerOver()
     {
@@ -76,6 +86,7 @@ internal static class PortalPickerPanel
         _origin = origin;
         _current = current;
 
+        _search.SetTextWithoutNotify("");
         _scroll.scrollSensitivity = VanillaScrollSensitivity();
         _panel.transform.SetAsLastSibling(); // above the map image so it receives the clicks
         _panel.SetActive(true);
@@ -96,6 +107,25 @@ internal static class PortalPickerPanel
             PortalInfo portal = Portals[i];
             portal.IsHome = portal.Id == home;
             Portals[i] = portal;
+        }
+        Rebuild();
+    }
+
+    /// <summary>Shows a portal's new name or name lock, keeping the scroll position and the search.</summary>
+    internal static void UpdatePortal(PortalInfo changed)
+    {
+        if (_panel == null || !_panel.activeSelf)
+        {
+            return;
+        }
+
+        for (int i = 0; i < Portals.Count; i++)
+        {
+            if (Portals[i].Id == changed.Id)
+            {
+                changed.IsHome = Portals[i].IsHome;
+                Portals[i] = changed;
+            }
         }
         Rebuild();
     }
@@ -159,8 +189,25 @@ internal static class PortalPickerPanel
         _goBackText = goBack.GetComponentInChildren<Text>();
         _goBackText.horizontalOverflow = HorizontalWrapMode.Wrap;
 
+        CreateSearch(_panel.transform);
         CreateList(_panel.transform);
         return true;
+    }
+
+    private static void CreateSearch(Transform parent)
+    {
+        GUIManager gui = GUIManager.Instance;
+        GameObject search = gui.CreateInputField(parent, Vector2.zero, Vector2.zero, Vector2.zero,
+            InputField.ContentType.Standard, Localize("$portalnetwork_search_placeholder"), 16);
+        search.name = "Search";
+        AddLayout(search, height: 32f);
+        _search = search.GetComponent<InputField>();
+        _search.characterLimit = 40;
+        _search.onValueChanged.AddListener(_ =>
+        {
+            Rebuild();
+            _scroll.verticalNormalizedPosition = 1f;
+        });
     }
 
     private static void CreateList(Transform parent)
@@ -230,9 +277,11 @@ internal static class PortalPickerPanel
         UpdateGoBack();
 
         HashSet<string> favourites = PortalFavourites.GetFavourites();
+        string filter = _search != null ? _search.text.Trim() : "";
         IEnumerable<(PortalInfo Portal, bool Current, bool Favourite, string Label)> rows = Portals
             .Select(p => (Portal: p, Current: p.Id == _current,
                 Favourite: favourites.Contains(PortalFavourites.Key(p.Position)), Label: Label(p)))
+            .Where(r => filter.Length == 0 || r.Label.IndexOf(filter, System.StringComparison.CurrentCultureIgnoreCase) >= 0)
             .OrderByDescending(r => r.Portal.IsHome)
             .ThenByDescending(r => r.Current)
             .ThenByDescending(r => r.Favourite)
@@ -244,7 +293,7 @@ internal static class PortalPickerPanel
         }
 
         _emptyText.gameObject.SetActive(Rows.Count == 0);
-        _emptyText.text = Localize("$portalnetwork_no_other_portals");
+        _emptyText.text = Localize(filter.Length > 0 ? "$portalnetwork_no_matches" : "$portalnetwork_no_other_portals");
     }
 
     private static void UpdateGoBack()
@@ -354,7 +403,86 @@ internal static class PortalPickerPanel
             gui.AveriaSerifBold, 14, gui.ValheimBeige, TextAnchor.MiddleRight);
         AddLayout(distance.gameObject, width: DistanceWidth, height: RowHeight);
 
+        AddRenameButton(row.transform, portal);
+        AddLockButton(row.transform, portal);
         return row;
+    }
+
+    /// <summary>The player as the server sees them, for showing only the buttons they may use (the server checks again).</summary>
+    private static Requester LocalRequester()
+    {
+        Player local = Player.m_localPlayer;
+        return new Requester(local != null ? local.GetPlayerID() : 0L, PlayerIdentity.LocalIsAdmin());
+    }
+
+    /// <summary>A pencil that opens the game's naming box. Hidden if the name is locked and the player may not unlock it.</summary>
+    private static void AddRenameButton(Transform row, PortalInfo portal)
+    {
+        if (!PortalRegistry.CanRename(portal, LocalRequester()))
+        {
+            AddSpacer(row);
+            return;
+        }
+
+        Button button = CreateIconButton(row, "Rename", PencilSprite(), IconIdle);
+        button.onClick.AddListener(() => TextInput.instance.RequestText(new RenameReceiver(portal), "$piece_portal_tag", PortalRegistry.MaxNameLength));
+    }
+
+    /// <summary>
+    /// A padlock: gold while the name is locked. The builder and admins click it to lock or unlock the name; anyone else
+    /// only sees it while the name is locked.
+    /// </summary>
+    private static void AddLockButton(Transform row, PortalInfo portal)
+    {
+        bool canChange = PortalRegistry.CanChange(portal, LocalRequester());
+        if (!canChange && !portal.NameLocked)
+        {
+            AddSpacer(row);
+            return;
+        }
+
+        Button button = CreateIconButton(row, "NameLock", LockSprite(), portal.NameLocked ? StarOn : LockOff);
+        button.interactable = canChange;
+        if (canChange)
+        {
+            button.onClick.AddListener(() => PortalNetworkRpc.SendNameLockRequest(portal.Id, !portal.NameLocked));
+        }
+    }
+
+    private static Button CreateIconButton(Transform row, string name, Sprite sprite, Color color)
+    {
+        GameObject icon = new(name, typeof(RectTransform), typeof(Image), typeof(Button));
+        icon.transform.SetParent(row, false);
+        AddLayout(icon, width: IconButtonSize, height: IconButtonSize);
+        Image image = icon.GetComponent<Image>();
+        image.sprite = sprite;
+        image.preserveAspect = true;
+        image.color = color;
+        Button button = icon.GetComponent<Button>();
+        button.transition = Selectable.Transition.None;
+        return button;
+    }
+
+    /// <summary>Keeps the rows lined up when a button isn't shown.</summary>
+    private static void AddSpacer(Transform row)
+    {
+        GameObject spacer = new("Spacer", typeof(RectTransform));
+        spacer.transform.SetParent(row, false);
+        AddLayout(spacer, width: IconButtonSize, height: IconButtonSize);
+    }
+
+    /// <summary>What the game's naming box edits: starts with the portal's name, and asks the server to rename it.</summary>
+    private sealed class RenameReceiver(PortalInfo portal) : TextReceiver
+    {
+        public string GetText()
+        {
+            return portal.Name ?? "";
+        }
+
+        public void SetText(string text)
+        {
+            PortalNetworkRpc.SendRenameRequest(portal.Id, text);
+        }
     }
 
     private static void ClearRows()
@@ -494,6 +622,53 @@ internal static class PortalPickerPanel
 
         _homeSprite = PolygonSprite(points);
         return _homeSprite;
+    }
+
+    /// <summary>A white pencil, pointing down to the left, drawn at runtime like the star.</summary>
+    private static Sprite PencilSprite()
+    {
+        if (_pencilSprite != null)
+        {
+            return _pencilSprite;
+        }
+
+        // Body from the tip (bottom-left) up to the end (top-right), in 0..1 units, counter-clockwise.
+        Vector2[] outline =
+        [
+            new(0.06f, 0.06f), new(0.32f, 0.14f), new(0.94f, 0.76f), new(0.76f, 0.94f), new(0.14f, 0.32f),
+        ];
+        _pencilSprite = PolygonSprite(Scale(outline));
+        return _pencilSprite;
+    }
+
+    /// <summary>A white padlock (body and shackle as one outline), drawn at runtime like the star.</summary>
+    private static Sprite LockSprite()
+    {
+        if (_lockSprite != null)
+        {
+            return _lockSprite;
+        }
+
+        // Counter-clockwise from the body's bottom-left corner, round the shackle and back down its inside.
+        Vector2[] outline =
+        [
+            new(0.16f, 0.04f), new(0.84f, 0.04f), new(0.84f, 0.52f), new(0.74f, 0.52f), new(0.74f, 0.72f),
+            new(0.66f, 0.88f), new(0.5f, 0.94f), new(0.34f, 0.88f), new(0.26f, 0.72f), new(0.26f, 0.52f),
+            new(0.38f, 0.52f), new(0.38f, 0.7f), new(0.43f, 0.79f), new(0.5f, 0.82f), new(0.57f, 0.79f),
+            new(0.62f, 0.7f), new(0.62f, 0.52f), new(0.16f, 0.52f),
+        ];
+        _lockSprite = PolygonSprite(Scale(outline));
+        return _lockSprite;
+    }
+
+    private static Vector2[] Scale(Vector2[] outline)
+    {
+        Vector2[] points = new Vector2[outline.Length];
+        for (int i = 0; i < outline.Length; i++)
+        {
+            points[i] = outline[i] * SpriteSize;
+        }
+        return points;
     }
 
     /// <summary>A white, antialiased filled polygon on a transparent square texture.</summary>

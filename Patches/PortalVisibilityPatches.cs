@@ -16,6 +16,7 @@ internal static class PortalOwnership
 {
     internal const string SetVisibilityRpc = "RPC_PortalNetwork_SetVisibility";
     internal const string SetHomeRpc = "RPC_PortalNetwork_SetHome";
+    internal const string SetNameLockRpc = "RPC_PortalNetwork_SetNameLock";
 }
 
 /// <summary>
@@ -34,6 +35,16 @@ internal static class TeleportWorld_Awake_Patch
 
         nview.Register<int>(PortalOwnership.SetVisibilityRpc, (sender, value) => OnSetVisibility(nview, sender, value));
         nview.Register<long>(PortalOwnership.SetHomeRpc, (sender, stamp) => OnSetHome(nview, sender, stamp));
+        nview.Register<bool>(PortalOwnership.SetNameLockRpc, (sender, locked) => OnSetNameLock(nview, sender, locked));
+    }
+
+    /// <summary>Runs on the ZDO's owner, for instructions from the server only (it has checked the player may).</summary>
+    private static void OnSetNameLock(ZNetView nview, long sender, bool locked)
+    {
+        if (sender == ZRoutedRpc.instance.GetServerPeerID() && nview.IsValid() && nview.IsOwner())
+        {
+            nview.GetZDO().Set(PortalRegistry.NameLockHash, locked);
+        }
     }
 
     /// <summary>
@@ -81,23 +92,37 @@ internal static class TeleportWorld_Awake_Patch
 }
 
 /// <summary>
-/// Shift + Use asks the server to toggle visibility; plain Use keeps vanilla's tag-naming behaviour.
+/// Shift + Use asks the server to toggle visibility. Plain Use keeps vanilla's naming box, unless the builder or an
+/// admin has locked the name and this player isn't one of them.
 /// </summary>
 [HarmonyPatch(typeof(TeleportWorld), nameof(TeleportWorld.Interact))]
 internal static class TeleportWorld_Interact_Patch
 {
     private static bool Prefix(TeleportWorld __instance, Humanoid human, bool hold, bool alt, ref bool __result)
     {
-        if (!alt || hold)
+        if (hold)
         {
             return true;
         }
 
         ZNetView nview = __instance.GetComponent<ZNetView>();
         ZDO zdo = nview != null ? nview.GetZDO() : null;
-        if (zdo == null || human is not Player)
+        if (zdo == null || human is not Player player)
         {
             return true;
+        }
+
+        if (!alt)
+        {
+            Requester who = new(player.GetPlayerID(), PlayerIdentity.LocalIsAdmin());
+            if (PortalRegistry.CanRename(PortalRegistry.ToInfo(zdo), who))
+            {
+                return true;
+            }
+
+            player.Message(MessageHud.MessageType.Center, "$portalnetwork_name_locked");
+            __result = false;
+            return false;
         }
 
         __result = true;
@@ -136,6 +161,11 @@ internal static class TeleportWorld_GetHoverText_Patch
         if (isHome)
         {
             text += "\n<color=" + HomeColorHex + ">$portalnetwork_home_portal</color>";
+        }
+
+        if (info.NameLocked)
+        {
+            text += "\n$portalnetwork_name_locked_status";
         }
         else if (HomePortal.HasHome)
         {

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- The portal list has a search box: type part of a portal's name or biome to show only the portals that match. Typing in it doesn't trigger the map's keys or the portal keys.
+- Portals can be renamed from the portal list with the pencil next to each one, using the same naming box as at the portal, even when the portal is far away. By default anyone who can see a portal can rename it, as anyone with access can rename it while standing at it.
+- The builder of a portal, and admins, can lock its name with the padlock next to it in the portal list. A locked name can only be changed by them, from the list or at the portal, and the portal's hover text says it is locked. Click the padlock again to unlock it.
+- The portal list is a little wider to fit the new buttons.
+- The server and clients must both be updated: the portal list now carries the name lock (protocol version 4).
 - Press **B** while looking at a portal, or with the portal map open, to go back to the portal of your last trip, like the portal list's **Go back to** button. At the end of a trip it takes you back where you came from, so you can hop between two portals. The portal's hover text and the portal map's key hints show it when there is somewhere to go back to. The key can be changed with the new `Travel.GoBackKey` setting.
 - The ping key now pings the spot you are looking at, or where you stand if you look at the sky, so you can show other players a place without opening the map.
 - The mod's keys now work while you hold other keys, such as moving or running. Before, every other key had to be let go first, so pinging while running didn't work.

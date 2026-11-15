@@ -7,8 +7,11 @@ using Jotunn.Managers;
 
 using PortalNetwork.Core;
 using PortalNetwork.Home;
+using PortalNetwork.Map;
 using PortalNetwork.Patches;
 using PortalNetwork.Portals;
+
+using Splatform;
 
 using UnityEngine;
 
@@ -19,7 +22,7 @@ internal static class PortalNetworkRpc
     /// <summary>
     /// Bump this, and the plugin's minor version, whenever the wire format changes.
     /// </summary>
-    private const int ProtocolVersion = 3;
+    private const int ProtocolVersion = 4;
 
     private static CustomRPC _listRequest;
     private static CustomRPC _listResponse;
@@ -31,6 +34,9 @@ internal static class PortalNetworkRpc
     private static CustomRPC _homeTeleportRequest;
     private static CustomRPC _homeRequest;
     private static CustomRPC _homeResponse;
+    private static CustomRPC _renameRequest;
+    private static CustomRPC _nameLockRequest;
+    private static CustomRPC _portalChanged;
 
     private static long ServerId => ZRoutedRpc.instance.GetServerPeerID();
 
@@ -49,6 +55,9 @@ internal static class PortalNetworkRpc
         _homeTeleportRequest = NetworkManager.Instance.AddRPC("PortalNetwork_HomeTeleportRequest", OnHomeTeleportRequest, Ignore);
         _homeRequest = NetworkManager.Instance.AddRPC("PortalNetwork_HomeRequest", OnHomeRequest, Ignore);
         _homeResponse = NetworkManager.Instance.AddRPC("PortalNetwork_HomeResponse", OnHomeResponse, OnHomeResponse);
+        _renameRequest = NetworkManager.Instance.AddRPC("PortalNetwork_RenameRequest", OnRenameRequest, Ignore);
+        _nameLockRequest = NetworkManager.Instance.AddRPC("PortalNetwork_NameLockRequest", OnNameLockRequest, Ignore);
+        _portalChanged = NetworkManager.Instance.AddRPC("PortalNetwork_PortalChanged", OnPortalChanged, OnPortalChanged);
     }
 
     // ---------------------------------------------------------------- client -> server
@@ -65,6 +74,24 @@ internal static class PortalNetworkRpc
         ZPackage package = new();
         package.Write(portalId);
         _teleportRequest.SendPackage(ServerId, package);
+    }
+
+    /// <summary>Renames the portal, signed with this player's platform id like vanilla's portal names.</summary>
+    internal static void SendRenameRequest(ZDOID portalId, string name)
+    {
+        ZPackage package = new();
+        package.Write(portalId);
+        package.Write(name ?? "");
+        package.Write(PlatformManager.DistributionPlatform.LocalUser.PlatformUserID.ToString());
+        _renameRequest.SendPackage(ServerId, package);
+    }
+
+    internal static void SendNameLockRequest(ZDOID portalId, bool locked)
+    {
+        ZPackage package = new();
+        package.Write(portalId);
+        package.Write(locked);
+        _nameLockRequest.SendPackage(ServerId, package);
     }
 
     internal static void SendVisibilityRequest(ZDOID portalId, PortalVisibility visibility)
@@ -277,6 +304,92 @@ internal static class PortalNetworkRpc
             : "$portalnetwork_now_private");
     }
 
+    private static IEnumerator OnRenameRequest(long sender, ZPackage package)
+    {
+        ZDOID portalId = package.ReadZDOID();
+        string name = package.ReadString();
+        string author = package.ReadString();
+        Requester who = PlayerIdentity.Resolve(sender);
+
+        if (!PortalRegistry.TryGetPortal(portalId, out ZDO zdo) || !PortalRegistry.IsVisibleTo(PortalRegistry.ToInfo(zdo), who))
+        {
+            SendNotice(sender, "$portalnetwork_portal_missing");
+            yield break;
+        }
+
+        PortalInfo portal = PortalRegistry.ToInfo(zdo);
+        if (!PortalRegistry.CanRename(portal, who))
+        {
+            SendNotice(sender, "$portalnetwork_name_locked");
+            yield break;
+        }
+
+        if (name.Length > PortalRegistry.MaxNameLength)
+        {
+            name = name.Substring(0, PortalRegistry.MaxNameLength);
+        }
+
+        // A loaded portal is renamed by its owner through vanilla's own rename. Far from every player nobody owns it,
+        // so the server writes the name itself, and it reaches players when they come near.
+        long owner = zdo.GetOwner();
+        if (owner != 0L)
+        {
+            ZRoutedRpc.instance.InvokeRoutedRPC(owner, zdo.m_uid, "RPC_SetTag", name, author);
+        }
+        else
+        {
+            zdo.Set(ZDOVars.s_tag, name);
+            zdo.Set(ZDOVars.s_tagauthor, author);
+        }
+
+        portal.Name = name;
+        portal.TagAuthor = author;
+        SendPortalChanged(sender, portal);
+        SendNotice(sender, "$portalnetwork_renamed");
+    }
+
+    private static IEnumerator OnNameLockRequest(long sender, ZPackage package)
+    {
+        ZDOID portalId = package.ReadZDOID();
+        bool locked = package.ReadBool();
+        Requester who = PlayerIdentity.Resolve(sender);
+
+        if (!PortalRegistry.TryGetPortal(portalId, out ZDO zdo))
+        {
+            SendNotice(sender, "$portalnetwork_portal_missing");
+            yield break;
+        }
+
+        PortalInfo portal = PortalRegistry.ToInfo(zdo);
+        if (!PortalRegistry.CanChange(portal, who))
+        {
+            SendNotice(sender, "$portalnetwork_only_builder_lock");
+            yield break;
+        }
+
+        long owner = zdo.GetOwner();
+        if (owner != 0L)
+        {
+            ZRoutedRpc.instance.InvokeRoutedRPC(owner, zdo.m_uid, PortalOwnership.SetNameLockRpc, locked);
+        }
+        else
+        {
+            zdo.Set(PortalRegistry.NameLockHash, locked);
+        }
+
+        portal.NameLocked = locked;
+        SendPortalChanged(sender, portal);
+        SendNotice(sender, locked ? "$portalnetwork_now_name_locked" : "$portalnetwork_now_name_unlocked");
+    }
+
+    /// <summary>Tells the player who changed a portal what it is now, so an open portal map can show it straight away.</summary>
+    private static void SendPortalChanged(long peer, PortalInfo portal)
+    {
+        ZPackage package = new();
+        WritePortal(package, portal);
+        _portalChanged.SendPackage(peer, package);
+    }
+
     private static void SendNotice(long peer, string textOrToken)
     {
         ZPackage package = new();
@@ -318,6 +431,12 @@ internal static class PortalNetworkRpc
         yield break;
     }
 
+    private static IEnumerator OnPortalChanged(long sender, ZPackage package)
+    {
+        PortalMapPicker.OnPortalChanged(ReadPortal(package));
+        yield break;
+    }
+
     private static IEnumerator OnNotice(long sender, ZPackage package)
     {
         PortalNetworkClient.ShowMessage(package.ReadString());
@@ -341,6 +460,7 @@ internal static class PortalNetworkRpc
         package.Write(portal.OwnerId);
         package.Write((int)portal.Visibility);
         package.Write(portal.IsHome);
+        package.Write(portal.NameLocked);
     }
 
     private static PortalInfo ReadPortal(ZPackage package)
@@ -355,6 +475,7 @@ internal static class PortalNetworkRpc
             OwnerId = package.ReadLong(),
             Visibility = (PortalVisibility)package.ReadInt(),
             IsHome = package.ReadBool(),
+            NameLocked = package.ReadBool(),
         };
     }
 }

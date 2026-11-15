@@ -79,15 +79,7 @@ internal static class PortalMapPicker
                 continue; // no point listing the portal you are standing at
             }
 
-            string label = PortalNames.Display(portal);
-            if (portal.Visibility == PortalVisibility.Private)
-            {
-                label += " (" + PortalNetworkLocalization.Localize("$portalnetwork_private_suffix") + ")";
-            }
-
-            // save: false keeps these out of the character's saved map data.
-            Minimap.PinData pin = minimap.AddPin(portal.Position, Minimap.PinType.Icon4, label, false, false);
-            pin.m_doubleSize = true;
+            Minimap.PinData pin = AddPin(minimap, portal);
             Entry entry = new() { Pin = pin, Portal = portal };
             Entries.Add(entry);
             if (portal.IsHome)
@@ -176,6 +168,53 @@ internal static class PortalMapPicker
 
         Minimap.instance.SetMapMode(Minimap.MapMode.Small); // closes the map; the patch clears our pins
         PortalNetworkClient.RequestTeleport(destination);
+    }
+
+    private static Minimap.PinData AddPin(Minimap minimap, PortalInfo portal)
+    {
+        string label = PortalNames.Display(portal);
+        if (portal.Visibility == PortalVisibility.Private)
+        {
+            label += " (" + PortalNetworkLocalization.Localize("$portalnetwork_private_suffix") + ")";
+        }
+
+        // save: false keeps these out of the character's saved map data.
+        Minimap.PinData pin = minimap.AddPin(portal.Position, Minimap.PinType.Icon4, label, false, false);
+        pin.m_doubleSize = true;
+        return pin;
+    }
+
+    /// <summary>
+    /// The server confirmed a rename or a name lock change by this player: show the portal's new name and lock on its
+    /// pin and in the list straight away, without waiting for the change to reach the portal.
+    /// </summary>
+    internal static void OnPortalChanged(PortalInfo changed)
+    {
+        Minimap minimap = Minimap.instance;
+        if (minimap == null || !IsActive)
+        {
+            return;
+        }
+
+        foreach (Entry entry in Entries)
+        {
+            if (entry.Portal.Id != changed.Id)
+            {
+                continue;
+            }
+
+            changed.IsHome = entry.Portal.IsHome;
+            entry.Portal = changed;
+
+            // A pin's name is drawn when it is added, so the pin is replaced.
+            _ = PickerPins.Remove(entry.Pin);
+            minimap.RemovePin(entry.Pin);
+            entry.Pin = AddPin(minimap, changed);
+            _ = PickerPins.Add(entry.Pin);
+            break;
+        }
+
+        PortalPickerPanel.UpdatePortal(changed);
     }
 
     internal static void Close()
