@@ -4,7 +4,7 @@
 
 # PortalNetwork
 
-Teleport to any portal through a map interface without tag linking.
+Teleport to any portal through a map interface without tag linking. Search, group and rename portals, travel home or back with a key, and keep portals public or private.
 To open the portal interface, walk into any portal.
 To show/hide the portal icons on the map and minimap, open the map as normal and press `P` (configurable).
 
@@ -56,12 +56,13 @@ Settings are in the BepInEx config file `javidahmed64592.portalnetwork.cfg`.
 ## Compatibility
 
 - Other mods that change how portals link or teleport (such as TargetPortal) replace the same behaviour, so only use one of them.
+- The portal keys (`B`, `H`, `Alt + H`) may be bound by other mods too. When one does something at a portal or in the portal map, mods that read keys through the game's controls (such as Jotunn mods) don't also react to it; mods that read the keyboard directly still do, so change one of the keys if they clash.
 - This mod has not been tested with a gamepad, only with keyboard and mouse. With a gamepad, move the map so a portal is under the crosshair and press the confirm button to travel there; the portal list needs a mouse.
 
 ## Uninstalling
 
 Portals go back to vanilla linking, where two portals with the same name connect, so rename them in pairs to keep using them.
-Whether a portal is public or private, and your favourites, stay saved but do nothing without the mod.
+Whether a portal is public or private, whether its name is locked, and your favourites, stay saved but do nothing without the mod.
 
 ## License
 

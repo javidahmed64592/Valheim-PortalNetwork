@@ -1,19 +1,25 @@
 # Changelog
 
-## Unreleased
+## 0.7.0
 
-- The portal list and the map are linked while you choose where to go: hovering over a portal in the list makes its icon on the map pulse, brighter and in front of the other icons, and hovering over a portal's icon on the map lights up its row in the list. With a gamepad, the portal under the crosshair is highlighted.
-- The portal list can be split into sections with the new **Biome** and **Distance** buttons above it. **Biome** gives a section per biome, in the order the game unlocks them. **Distance** gives a section for each set of portals near each other, such as the portals around one island, headed with how far away it is and in which direction, nearest first. With both on, each biome is split by distance, so, say, the Mistlands in the east and in the west are listed apart. Inside each section the order is the same as the plain list: the portal you are at, then favourites, then by name. The home portal stays at the very top, and the search box still filters the list. The buttons are remembered (`PortalList.GroupByBiome` and `GroupByDistance`), and `PortalList.GroupDistance` (default 600 metres) sets how close portals must be to share a section.
-- The portal list has a search box: type part of a portal's name or biome to show only the portals that match. Typing in it doesn't trigger the map's keys or the portal keys.
-- Portals can be renamed from the portal list with the pencil next to each one, using the same naming box as at the portal, even when the portal is far away. By default anyone who can see a portal can rename it, as anyone with access can rename it while standing at it.
-- The builder of a portal, and admins, can lock its name with the padlock next to it in the portal list. A locked name can only be changed by them, from the list or at the portal, and the portal's hover text says it is locked. Click the padlock again to unlock it.
-- The portal list is a little wider to fit the new buttons.
-- The server and clients must both be updated: the portal list now carries the name lock (protocol version 4).
-- Press **B** while looking at a portal, or with the portal map open, to go back to the portal of your last trip, like the portal list's **Go back to** button. At the end of a trip it takes you back where you came from, so you can hop between two portals. The portal's hover text and the portal map's key hints show it when there is somewhere to go back to. The key can be changed with the new `Travel.GoBackKey` setting.
+The server and every player must update together: the portal list now carries whether a portal's name is locked.
+
+**Portal list**
+
+- Type in the new search box to show only the portals whose name or biome matches. Typing in it doesn't trigger the map's keys or the portal keys.
+- Split the list into sections with the new **Biome** and **Distance** buttons above it. **Biome** gives a section per biome, in the order the game unlocks them. **Distance** gives a section for each set of portals near each other, such as the portals around one island, headed with how far away it is and in which direction, nearest first. With both on, each biome is split by distance, so, say, the Mistlands in the east and in the west are listed apart. Inside each section the order is the same as the plain list: the portal you are at, then favourites, then by name. The home portal stays at the very top. The buttons are remembered (`PortalList.GroupByBiome` and `GroupByDistance`), and `PortalList.GroupDistance` (default 600 metres) sets how close portals must be to share a section.
+- Rename a portal with the pencil next to it, using the same naming box as at the portal, even when it is far away. By default anyone who can see a portal can rename it, as anyone with access can rename it while standing at it.
+- The builder of a portal, and admins, can lock its name with the padlock next to it. A locked name can only be changed by them, from the list or at the portal, and the portal's hover text says it is locked. Click the padlock again to unlock it.
+- The list and the map are linked while you choose where to go: hovering over a portal in the list makes its icon on the map pulse and stand out, and hovering over a portal's icon on the map lights up its row in the list. With a gamepad, the portal under the crosshair is highlighted.
+- The list is a little wider to fit the new buttons.
+
+**Keys**
+
+- Press **B** while looking at a portal, or with the portal map open, to go back to the portal of your last trip, like the list's **Go back to** button. At the end of a trip it takes you back where you came from, so you can hop between two portals. The portal's hover text and the portal map's key hints show it when there is somewhere to go back to. The key can be changed with the new `Travel.GoBackKey` setting.
 - The ping key now pings the spot you are looking at, or where you stand if you look at the sky, so you can show other players a place without opening the map.
 - The mod's keys now work while you hold other keys, such as moving or running. Before, every other key had to be let go first, so pinging while running didn't work.
-- The default key for setting the home portal is now **Alt + H** (it was **Shift + H**). Now that the keys work while running, admins holding Shift to run back to a portal would set or remove the home portal when pressing **H** to travel home. Config files that already exist keep their key; change `Home.SetHomeKey` to switch.
-- When one of the portal keys (**B**, **H**, **Alt + H**) does something at the portal you are looking at, or in the portal map, it no longer also does what other mods bound to the same key, such as BetterHammer's build menu on **B**. This works for keys the game and Jotunn mods read through the game's own controls; mods that read the keyboard directly can't be stopped.
+- The default key for setting the home portal is now **Alt + H** (it was **Shift + H**), so admins holding Shift to run back to a portal don't set or remove the home portal when pressing **H** to travel home. Config files that already exist keep their key; change `Home.SetHomeKey` to switch.
+- When **B**, **H** or **Alt + H** does something at the portal you are looking at, or in the portal map, it no longer also does what other mods bound to the same key, such as BetterHammer's build menu on **B**. This works for mods that read keys through the game's own controls, as Jotunn mods do; mods that read the keyboard directly can't be stopped.
 - Typing in chat or the console while the portal map is open no longer triggers the portal keys, so typing a **B** or an **H** doesn't teleport you.
 
 ## 0.6.0
