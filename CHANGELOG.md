@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Press **B** while looking at a portal, or with the portal map open, to go back to the portal of your last trip, like the portal list's **Go back to** button. At the end of a trip it takes you back where you came from, so you can hop between two portals. The portal's hover text and the portal map's key hints show it when there is somewhere to go back to. The key can be changed with the new `Travel.GoBackKey` setting.
+- The ping key now pings the spot you are looking at, or where you stand if you look at the sky, so you can show other players a place without opening the map.
+- The mod's keys now work while you hold other keys, such as moving or running. Before, every other key had to be let go first, so pinging while running didn't work.
+- The default key for setting the home portal is now **Alt + H** (it was **Shift + H**). Now that the keys work while running, admins holding Shift to run back to a portal would set or remove the home portal when pressing **H** to travel home. Config files that already exist keep their key; change `Home.SetHomeKey` to switch.
+- When one of the portal keys (**B**, **H**, **Alt + H**) does something at the portal you are looking at, or in the portal map, it no longer also does what other mods bound to the same key, such as BetterHammer's build menu on **B**. This works for keys the game and Jotunn mods read through the game's own controls; mods that read the keyboard directly can't be stopped.
+- Typing in chat or the console while the portal map is open no longer triggers the portal keys, so typing a **B** or an **H** doesn't teleport you.
+
 ## 0.6.0
 
 - When another player teleports, their map icon now takes the same time to reach their destination however far they went. Before, it moved at a fixed speed, so it could take a long time to cross the map after a long trip. The time can be changed with the new `PlayerIconTeleportSeconds` setting (default 2 seconds, 0 = instant).

@@ -142,6 +142,12 @@ internal static class TeleportWorld_GetHoverText_Patch
             text += Hint(HomePortal.KeyText(PortalNetworkPlugin._travelHomeKey.Value), "$portalnetwork_travel_home_hint");
         }
 
+        // Only where the last trip leads is known here; whether that portal is still there is checked on the key.
+        if (PortalFavourites.TryGetGoBackKey(zdo.GetPosition(), out _))
+        {
+            text += Hint(HomePortal.KeyText(PortalNetworkPlugin._goBackKey.Value), "$portalnetwork_go_back_hint");
+        }
+
         // Cosmetic only: the server makes the real decision when a key is pressed.
         Player local = Player.m_localPlayer;
         if (local != null)
