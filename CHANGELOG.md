@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- The portal list can be split into sections with the new **Biome** and **Distance** buttons above it. **Biome** gives a section per biome, in the order the game unlocks them. **Distance** gives a section for each set of portals near each other, such as the portals around one island, headed with how far away it is and in which direction, nearest first. With both on, each biome is split by distance, so, say, the Mistlands in the east and in the west are listed apart. Inside each section the order is the same as the plain list: the portal you are at, then favourites, then by name. The home portal stays at the very top, and the search box still filters the list. The buttons are remembered (`PortalList.GroupByBiome` and `GroupByDistance`), and `PortalList.GroupDistance` (default 600 metres) sets how close portals must be to share a section.
 - The portal list has a search box: type part of a portal's name or biome to show only the portals that match. Typing in it doesn't trigger the map's keys or the portal keys.
 - Portals can be renamed from the portal list with the pencil next to each one, using the same naming box as at the portal, even when the portal is far away. By default anyone who can see a portal can rename it, as anyone with access can rename it while standing at it.
 - The builder of a portal, and admins, can lock its name with the padlock next to it in the portal list. A locked name can only be changed by them, from the list or at the portal, and the portal's hover text says it is locked. Click the padlock again to unlock it.

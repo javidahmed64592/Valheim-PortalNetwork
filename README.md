@@ -15,6 +15,7 @@ To show/hide the portal icons on the map and minimap, open the map as normal and
 Walking into a portal also opens a list of every portal you can travel to, next to the map.
 
 - Type in the search box to show only the portals whose name or biome matches.
+- Use the **Biome** and **Distance** buttons to split the list into sections: a section per biome, a section for each set of portals near each other (such as one island's), or both, so the same biome in different parts of the world is listed apart.
 - Click the star next to a portal to make it a favourite. Favourites come first in the list and have a gold ring on the map.
 - Click the pencil next to a portal to rename it, even when it is far away. Anyone who can see a portal can rename it.
 - The builder of a portal, and admins, can click the padlock next to it to lock its name, so only they can rename it, from the list or at the portal.

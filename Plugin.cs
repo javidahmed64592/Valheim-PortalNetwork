@@ -30,6 +30,9 @@ public class PortalNetworkPlugin : BaseUnityPlugin
     internal static ConfigEntry<KeyboardShortcut> _setHomeKey;
     internal static ConfigEntry<KeyboardShortcut> _goBackKey;
     internal static ConfigEntry<float> _otherPinOpacity;
+    internal static ConfigEntry<bool> _groupByBiome;
+    internal static ConfigEntry<bool> _groupByDistance;
+    internal static ConfigEntry<float> _groupDistance;
     internal static ConfigEntry<float> _playerIconTeleportSeconds;
     internal static ConfigEntry<Color> _portalIconColour;
     internal static ConfigEntry<Color> _homeIconColour;
@@ -66,6 +69,23 @@ public class PortalNetworkPlugin : BaseUnityPlugin
             "GoBackKey",
             new KeyboardShortcut(KeyCode.B),
             "Press while looking at a portal, or with the portal map open, to go back to the portal of your last trip, like the portal list's \"Go back to\" button.");
+        _groupByBiome = Config.Bind(
+            "PortalList",
+            "GroupByBiome",
+            false,
+            "Split the portal list into a section per biome. Also set by the Biome button above the list.");
+        _groupByDistance = Config.Bind(
+            "PortalList",
+            "GroupByDistance",
+            false,
+            "Split the portal list into sections of portals near each other, such as the portals around one island. Also set by the Distance button above the list.");
+        _groupDistance = Config.Bind(
+            "PortalList",
+            "GroupDistance",
+            600f,
+            new ConfigDescription(
+                "When grouping by distance, portals this many metres or closer to each other share a section, and so do portals linked through others. Lower it if portals on different islands end up together, raise it if one island's portals are split.",
+                new AcceptableValueRange<float>(50f, 5000f)));
         _otherPinOpacity = Config.Bind(
             "Map",
             "PickerOtherIconOpacity",
