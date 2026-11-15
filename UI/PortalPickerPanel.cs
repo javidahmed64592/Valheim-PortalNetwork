@@ -10,6 +10,7 @@ using PortalNetwork.Network;
 using PortalNetwork.Portals;
 
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace PortalNetwork.UI;
@@ -42,6 +43,7 @@ internal static class PortalPickerPanel
     private static readonly Color ListBackground = new(0f, 0f, 0f, 0.35f);
     private static readonly Color IconIdle = new(1f, 1f, 1f, 0.6f);
     private static readonly Color LockOff = new(1f, 1f, 1f, 0.2f);
+    private static Color RowHighlight => new(StarOn.r, StarOn.g, StarOn.b, 0.25f);
 
     private static GameObject _panel;
     private static Button _goBackButton;
@@ -59,6 +61,10 @@ internal static class PortalPickerPanel
 
     private static readonly List<PortalInfo> Portals = [];
     private static readonly List<GameObject> Rows = [];
+
+    /// <summary>Each portal row's background, lit while that portal is highlighted.</summary>
+    private static readonly Dictionary<ZDOID, Image> RowBackgrounds = [];
+    private static ZDOID _shownHighlight = ZDOID.None;
     private static Vector3 _origin;
     private static ZDOID _current;
 
@@ -441,8 +447,13 @@ internal static class PortalPickerPanel
     {
         GUIManager gui = GUIManager.Instance;
 
-        GameObject row = new("Row", typeof(RectTransform));
+        // A see-through background so the whole row, gaps included, counts as under the mouse.
+        GameObject row = new("Row", typeof(RectTransform), typeof(Image));
         row.transform.SetParent(_content, false);
+        Image background = row.GetComponent<Image>();
+        background.color = Color.clear;
+        RowBackgrounds[portal.Id] = background;
+        row.AddComponent<RowHover>().Portal = portal.Id;
         HorizontalLayoutGroup layout = row.AddComponent<HorizontalLayoutGroup>();
         layout.spacing = 6f;
         layout.childAlignment = TextAnchor.MiddleLeft;
@@ -512,6 +523,28 @@ internal static class PortalPickerPanel
         AddRenameButton(row.transform, portal);
         AddLockButton(row.transform, portal);
         return row;
+    }
+
+    /// <summary>While the mouse is over a portal's row, that portal's icon stands out on the map.</summary>
+    private sealed class RowHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+    {
+        public ZDOID Portal;
+
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            PortalMapPicker.Highlight(Portal);
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            PortalMapPicker.Unhighlight(Portal);
+        }
+
+        /// <summary>Rows are rebuilt (sorting, search, grouping) and hidden with the list, without a pointer exit.</summary>
+        private void OnDisable()
+        {
+            PortalMapPicker.Unhighlight(Portal);
+        }
     }
 
     /// <summary>The player as the server sees them, for showing only the buttons they may use (the server checks again).</summary>
@@ -591,8 +624,32 @@ internal static class PortalPickerPanel
         }
     }
 
+    /// <summary>
+    /// Lights the row of the highlighted portal, the one under the mouse in the list or on the map, so the list and the
+    /// map can be matched up. Called every frame; only changes the rows when the highlight moves.
+    /// </summary>
+    internal static void ShowHighlight(ZDOID portal)
+    {
+        if (portal == _shownHighlight)
+        {
+            return;
+        }
+
+        if (RowBackgrounds.TryGetValue(_shownHighlight, out Image previous) && previous != null)
+        {
+            previous.color = Color.clear;
+        }
+        if (RowBackgrounds.TryGetValue(portal, out Image next) && next != null)
+        {
+            next.color = RowHighlight;
+        }
+        _shownHighlight = portal;
+    }
+
     private static void ClearRows()
     {
+        RowBackgrounds.Clear();
+        _shownHighlight = ZDOID.None; // the new rows are lit on the next frame
         foreach (GameObject row in Rows)
         {
             if (row != null)

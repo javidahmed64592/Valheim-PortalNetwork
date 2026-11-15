@@ -128,6 +128,16 @@ internal static class PortalMapPicker
 
     private static void PickAt(Vector2 pointer)
     {
+        Entry best = NearestAt(pointer);
+        if (best != null)
+        {
+            Teleport(best.Portal);
+        }
+    }
+
+    /// <summary>The portal whose icon is under <paramref name="pointer"/> (screen pixels), or null.</summary>
+    private static Entry NearestAt(Vector2 pointer)
+    {
         Entry best = null;
         float bestDistance = float.MaxValue;
 
@@ -150,12 +160,7 @@ internal static class PortalMapPicker
             }
         }
 
-        if (best == null)
-        {
-            return;
-        }
-
-        Teleport(best.Portal);
+        return best;
     }
 
     /// <summary>Used by both the map pins and the portal list.</summary>
@@ -234,6 +239,8 @@ internal static class PortalMapPicker
             }
         }
         Entries.Clear();
+        _listHover = ZDOID.None;
+        _mapHover = ZDOID.None;
         _home = null;
         _entered = ZDOID.None;
         AtHome = false;
@@ -276,8 +283,74 @@ internal static class PortalMapPicker
             }
         }
 
-        PortalPinStyle.Apply(PickerPins, _home?.Pin);
+        UpdateMapHover();
+        PortalPinStyle.Apply(PickerPins, _home?.Pin, HighlightedPin());
+        PortalPickerPanel.ShowHighlight(Highlighted);
         PortalPinStyle.DimOthers(PickerPins, PortalNetworkPlugin._otherPinOpacity.Value);
+    }
+
+    /// <summary>The portal whose row in the portal list is under the mouse.</summary>
+    private static ZDOID _listHover = ZDOID.None;
+
+    /// <summary>The portal whose icon on the map is under the mouse (or the gamepad crosshair).</summary>
+    private static ZDOID _mapHover = ZDOID.None;
+
+    /// <summary>
+    /// The portal that stands out both on the map (its icon pulses) and in the list (its row is lit): the one under
+    /// the mouse, whichever of the two it is over.
+    /// </summary>
+    private static ZDOID Highlighted => _listHover.IsNone() ? _mapHover : _listHover;
+
+    /// <summary>The mouse moved onto a portal's row in the list.</summary>
+    internal static void Highlight(ZDOID portal)
+    {
+        _listHover = portal;
+    }
+
+    /// <summary>The mouse left a portal's row, or the row went away.</summary>
+    internal static void Unhighlight(ZDOID portal)
+    {
+        if (_listHover == portal)
+        {
+            _listHover = ZDOID.None;
+        }
+    }
+
+    /// <summary>Called every frame: which portal icon is under the mouse, or under the crosshair with a gamepad.</summary>
+    private static void UpdateMapHover()
+    {
+        Vector2? pointer = null;
+        if (ZInput.IsMouseActive())
+        {
+            if (!PortalPickerPanel.IsPointerOver())
+            {
+                pointer = ZInput.pointerPosition;
+            }
+        }
+        else if (ZInput.IsGamepadActive())
+        {
+            pointer = new Vector2(Screen.width / 2f, Screen.height / 2f);
+        }
+
+        Entry entry = pointer.HasValue ? NearestAt(pointer.Value) : null;
+        _mapHover = entry != null ? entry.Portal.Id : ZDOID.None;
+    }
+
+    private static Minimap.PinData HighlightedPin()
+    {
+        ZDOID highlighted = Highlighted;
+        if (highlighted.IsNone())
+        {
+            return null;
+        }
+        foreach (Entry entry in Entries)
+        {
+            if (entry.Portal.Id == highlighted)
+            {
+                return entry.Pin;
+            }
+        }
+        return null;
     }
 
     /// <summary>The server announced a new home portal (or none) while the picker may be open.</summary>
