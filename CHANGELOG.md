@@ -1,12 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- Press **B** while looking at a portal, or with the portal map open, to go back to the portal of your last trip, like the portal list's **Go back to** button. At the end of a trip it takes you back where you came from, so you can hop between two portals. The portal's hover text and the portal map's key hints show it when there is somewhere to go back to. The key can be changed with the new `Travel.GoBackKey` setting.
+- The ping key now pings the spot you are looking at, or where you stand if you look at the sky, so you can show other players a place without opening the map.
+- The mod's keys now work while you hold other keys, such as moving or running. Before, every other key had to be let go first, so pinging while running didn't work. For players who aren't admins, **Shift + H** while running is now just **H** (travel home), not a refused attempt to set the home portal.
+
 ## 0.6.0
 
 - When another player teleports, their map icon now takes the same time to reach their destination however far they went. Before, it moved at a fixed speed, so it could take a long time to cross the map after a long trip. The time can be changed with the new `PlayerIconTeleportSeconds` setting (default 2 seconds, 0 = instant).
-- Press **P** while walking around, with no map or menu open, to ping the spot you are looking at on everyone's map (or where you stand, if you look at the sky). Other players can find you, or see what you mean, without you opening the map. It works while moving or running too. The key can be changed with the new `PingLocation` setting.
+- Press **P** while walking around, with no map or menu open, to ping your location on everyone's map. Other players can find you without you opening the map. The key can be changed with the new `PingLocation` setting.
 - **Home portal.** Admins, and the host of a self-hosted world, can press **Shift + H** while looking at a portal, or with the portal map open, to make it the world's home portal, shared by everyone. Pressing it again at the home portal stops it being home. Press **H** while looking at any other portal, or with the portal map open, to travel straight there. The portal map's key hints show both keys whenever they would do something. The home portal is always public, green on the map and first in the portal list, where it has a house instead of the favourite star. The keys can be changed with the new `TravelHomeKey` and `SetHomeKey` settings.
-- Press **B** while looking at a portal, or with the portal map open, to go back to the portal of your last trip, like the portal list's **Go back to** button. At the end of a trip it takes you back where you came from, so you can hop between two portals. The portal's hover text and the portal map's key hints show it when there is somewhere to go back to. The key can be changed with the new `Travel.GoBackKey` setting.
-- The mod's keys now work while you hold other keys, such as moving or running. Before, every other key had to be let go first. For players who aren't admins, **Shift + H** while running is now just **H** (travel home), not a refused attempt to set the home portal.
 - Fixed portal names, public/private settings and the home portal sometimes being lost when the world was reloaded. The game only saved changes to portals in a session where a portal was also built, destroyed or linked, which rarely happens with this mod. Portals are now saved every time the world is.
 - Fixed admins on a crossplay dedicated server not seeing the admin-only key hints on portals, such as toggling another player's portal's visibility. The keys themselves already worked.
 - Favourite portals have a gold ring around their icon on the map and minimap, so they stand out from the other portals.
