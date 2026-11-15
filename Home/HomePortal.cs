@@ -14,7 +14,8 @@ namespace PortalNetwork.Home;
 
 /// <summary>
 /// The world's home portal, as seen by this client, and the keys used while looking at a portal: one travels to the
-/// home portal, the other (admins and the host only) makes the portal the new home, or stops it being home. The server
+/// home portal, one (admins and the host only) makes the portal the new home, or stops it being home, and one goes
+/// back to the portal of the last trip (see <see cref="PortalFavourites.TryGetGoBackKey"/>). The server
 /// stores the home portal and makes every decision; this only remembers which portal it is for the hover text, the map
 /// and the portal list.
 /// </summary>
@@ -101,15 +102,22 @@ internal static class HomePortal
             return;
         }
 
-        if (PortalNetworkPlugin._setHomeKey.Value.IsDown())
+        // Only admins have the set home key, so for anyone else Shift + H (say, while running) is just H.
+        if (LocalPlayerCanSetHome() && KeyInput.IsDown(PortalNetworkPlugin._setHomeKey.Value))
         {
             PortalNetworkRpc.SendSetHomeRequest(zdo.m_uid, !IsHome(zdo.m_uid));
         }
-        else if (PortalNetworkPlugin._travelHomeKey.Value.IsDown()
+        else if (KeyInput.IsDown(PortalNetworkPlugin._travelHomeKey.Value)
             && !IsHome(zdo.m_uid)
             && PortalNetworkClient.CanUsePortals(player, portal))
         {
             PortalNetworkClient.RequestHomeTeleport(zdo.m_uid, zdo.GetPosition());
+        }
+        else if (KeyInput.IsDown(PortalNetworkPlugin._goBackKey.Value)
+            && PortalFavourites.TryGetGoBackKey(zdo.GetPosition(), out _)
+            && PortalNetworkClient.CanUsePortals(player, portal))
+        {
+            PortalNetworkClient.RequestGoBack(zdo.m_uid, zdo.GetPosition());
         }
     }
 

@@ -28,6 +28,7 @@ public class PortalNetworkPlugin : BaseUnityPlugin
     internal static ConfigEntry<KeyboardShortcut> _pingKey;
     internal static ConfigEntry<KeyboardShortcut> _travelHomeKey;
     internal static ConfigEntry<KeyboardShortcut> _setHomeKey;
+    internal static ConfigEntry<KeyboardShortcut> _goBackKey;
     internal static ConfigEntry<float> _otherPinOpacity;
     internal static ConfigEntry<float> _playerIconTeleportSeconds;
     internal static ConfigEntry<Color> _portalIconColour;
@@ -49,7 +50,7 @@ public class PortalNetworkPlugin : BaseUnityPlugin
             "Map",
             "PingLocation",
             new KeyboardShortcut(KeyCode.P),
-            "Press while no map or menu is open to ping your location on everyone's map.");
+            "Press while no map or menu is open to ping the spot you are looking at on everyone's map (where you stand if you look at the sky).");
         _travelHomeKey = Config.Bind(
             "Home",
             "TravelHomeKey",
@@ -60,6 +61,11 @@ public class PortalNetworkPlugin : BaseUnityPlugin
             "SetHomeKey",
             new KeyboardShortcut(KeyCode.H, KeyCode.LeftShift),
             "Press while looking at a portal to make it the world's home portal (admins and the host only).");
+        _goBackKey = Config.Bind(
+            "Travel",
+            "GoBackKey",
+            new KeyboardShortcut(KeyCode.B),
+            "Press while looking at a portal, or with the portal map open, to go back to the portal of your last trip, like the portal list's \"Go back to\" button.");
         _otherPinOpacity = Config.Bind(
             "Map",
             "PickerOtherIconOpacity",

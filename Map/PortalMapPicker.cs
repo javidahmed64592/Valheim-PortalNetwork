@@ -32,6 +32,29 @@ internal static class PortalMapPicker
     /// <summary>True if the set home key would do something for the local player.</summary>
     internal static bool CanSetHome => IsActive && !_entered.IsNone() && HomePortal.LocalPlayerCanSetHome();
 
+    /// <summary>True if the go back key would do something: the last trip's portal is in the list.</summary>
+    internal static bool CanGoBack => TryGetGoBack(out _);
+
+    /// <summary>The portal the list's "Go back to" button leads to, if it is in the list.</summary>
+    internal static bool TryGetGoBack(out PortalInfo target)
+    {
+        target = default;
+        if (!IsActive || !PortalFavourites.TryGetGoBackKey(_origin, out string key))
+        {
+            return false;
+        }
+
+        foreach (Entry entry in Entries)
+        {
+            if (PortalFavourites.Key(entry.Portal.Position) == key)
+            {
+                target = entry.Portal;
+                return true;
+            }
+        }
+        return false;
+    }
+
     /// <summary>True if the portal the player is standing at is the home portal.</summary>
     internal static bool AtHome { get; private set; }
 
@@ -197,14 +220,19 @@ internal static class PortalMapPicker
 
         if (!Minimap.InTextInput())
         {
-            if (CanSetHome && PortalNetworkPlugin._setHomeKey.Value.IsDown())
+            if (CanSetHome && KeyInput.IsDown(PortalNetworkPlugin._setHomeKey.Value))
             {
                 // The list and pins update when the server announces the new home portal.
                 PortalNetworkRpc.SendSetHomeRequest(_entered, !AtHome);
             }
-            else if (CanTravelHome && PortalNetworkPlugin._travelHomeKey.Value.IsDown())
+            else if (CanTravelHome && KeyInput.IsDown(PortalNetworkPlugin._travelHomeKey.Value))
             {
                 Teleport(_home.Portal);
+                return;
+            }
+            else if (KeyInput.IsDown(PortalNetworkPlugin._goBackKey.Value) && TryGetGoBack(out PortalInfo back))
+            {
+                Teleport(back);
                 return;
             }
         }

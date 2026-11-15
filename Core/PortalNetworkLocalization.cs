@@ -32,6 +32,7 @@ internal static class PortalNetworkLocalization
             { "portalnetwork_travel_home_hint", "Travel home" },
             { "portalnetwork_set_home_hint", "Set as home portal" },
             { "portalnetwork_remove_home_hint", "Remove home portal" },
+            { "portalnetwork_go_back_hint", "Go back" },
             { "portalnetwork_home_set", "This is now the home portal" },
             { "portalnetwork_home_removed", "This is no longer the home portal" },
             { "portalnetwork_not_home", "This is not the home portal" },
