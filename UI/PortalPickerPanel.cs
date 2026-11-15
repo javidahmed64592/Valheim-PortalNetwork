@@ -10,6 +10,7 @@ using PortalNetwork.Network;
 using PortalNetwork.Portals;
 
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace PortalNetwork.UI;
@@ -441,8 +442,11 @@ internal static class PortalPickerPanel
     {
         GUIManager gui = GUIManager.Instance;
 
-        GameObject row = new("Row", typeof(RectTransform));
+        // A see-through background so the whole row, gaps included, counts as under the mouse.
+        GameObject row = new("Row", typeof(RectTransform), typeof(Image));
         row.transform.SetParent(_content, false);
+        row.GetComponent<Image>().color = Color.clear;
+        row.AddComponent<RowHover>().Portal = portal.Id;
         HorizontalLayoutGroup layout = row.AddComponent<HorizontalLayoutGroup>();
         layout.spacing = 6f;
         layout.childAlignment = TextAnchor.MiddleLeft;
@@ -512,6 +516,28 @@ internal static class PortalPickerPanel
         AddRenameButton(row.transform, portal);
         AddLockButton(row.transform, portal);
         return row;
+    }
+
+    /// <summary>While the mouse is over a portal's row, that portal's icon stands out on the map.</summary>
+    private sealed class RowHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+    {
+        public ZDOID Portal;
+
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            PortalMapPicker.Highlight(Portal);
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            PortalMapPicker.Unhighlight(Portal);
+        }
+
+        /// <summary>Rows are rebuilt (sorting, search, grouping) and hidden with the list, without a pointer exit.</summary>
+        private void OnDisable()
+        {
+            PortalMapPicker.Unhighlight(Portal);
+        }
     }
 
     /// <summary>The player as the server sees them, for showing only the buttons they may use (the server checks again).</summary>

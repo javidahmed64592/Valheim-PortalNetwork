@@ -34,11 +34,15 @@ internal static class PortalPinStyle
     private static readonly List<Transform> Icons = [];
     private static readonly List<Transform> Names = [];
 
+    /// <summary>How much of white is mixed into the highlighted portal's colour.</summary>
+    private const float HighlightBrightness = 0.45f;
+
     /// <summary>
     /// Tints the given pins, with the home colour for <paramref name="home"/>, gives favourite portals a ring, and keeps
-    /// their icons and labels drawn in front of all other pins.
+    /// their icons and labels drawn in front of all other pins. The <paramref name="highlighted"/> pin (the portal under
+    /// the mouse in the portal list) is brighter, pulses like a ping and is drawn in front of the rest.
     /// </summary>
-    internal static void Apply(IEnumerable<Minimap.PinData> pins, Minimap.PinData home)
+    internal static void Apply(IEnumerable<Minimap.PinData> pins, Minimap.PinData home, Minimap.PinData highlighted = null)
     {
         Icons.Clear();
         Names.Clear();
@@ -47,10 +51,17 @@ internal static class PortalPinStyle
         {
             if (pin.m_iconElement != null)
             {
-                pin.m_iconElement.color = pin == home ? HomeColor : PortalColor;
+                Color color = pin == home ? HomeColor : PortalColor;
+                pin.m_iconElement.color = pin == highlighted ? Color.Lerp(color, Color.white, HighlightBrightness) : color;
 
                 // Our pins sit exactly on their portal, and favourites are stored by portal position.
                 SetBorder(pin.m_iconElement, favourites.Contains(PortalFavourites.Key(pin.m_pos)));
+            }
+            // Vanilla pulses the size of an animated pin, as it does for pings.
+            pin.m_animate = pin == highlighted;
+            if (pin == highlighted)
+            {
+                continue; // added last below, so it is drawn in front
             }
             if (pin.m_uiElement != null)
             {
@@ -60,6 +71,15 @@ internal static class PortalPinStyle
             {
                 Names.Add(pin.m_NamePinData.PinNameRectTransform);
             }
+        }
+
+        if (highlighted?.m_uiElement != null)
+        {
+            Icons.Add(highlighted.m_uiElement);
+        }
+        if (highlighted?.m_NamePinData?.PinNameRectTransform != null)
+        {
+            Names.Add(highlighted.m_NamePinData.PinNameRectTransform);
         }
 
         BringToFront(Icons);

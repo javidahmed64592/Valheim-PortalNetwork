@@ -234,6 +234,7 @@ internal static class PortalMapPicker
             }
         }
         Entries.Clear();
+        _highlighted = ZDOID.None;
         _home = null;
         _entered = ZDOID.None;
         AtHome = false;
@@ -276,8 +277,42 @@ internal static class PortalMapPicker
             }
         }
 
-        PortalPinStyle.Apply(PickerPins, _home?.Pin);
+        PortalPinStyle.Apply(PickerPins, _home?.Pin, HighlightedPin());
         PortalPinStyle.DimOthers(PickerPins, PortalNetworkPlugin._otherPinOpacity.Value);
+    }
+
+    /// <summary>The portal under the mouse in the portal list, whose pin stands out on the map.</summary>
+    private static ZDOID _highlighted = ZDOID.None;
+
+    /// <summary>The mouse moved onto a portal's row in the list.</summary>
+    internal static void Highlight(ZDOID portal)
+    {
+        _highlighted = portal;
+    }
+
+    /// <summary>The mouse left a portal's row, or the row went away.</summary>
+    internal static void Unhighlight(ZDOID portal)
+    {
+        if (_highlighted == portal)
+        {
+            _highlighted = ZDOID.None;
+        }
+    }
+
+    private static Minimap.PinData HighlightedPin()
+    {
+        if (_highlighted.IsNone())
+        {
+            return null;
+        }
+        foreach (Entry entry in Entries)
+        {
+            if (entry.Portal.Id == _highlighted)
+            {
+                return entry.Pin;
+            }
+        }
+        return null;
     }
 
     /// <summary>The server announced a new home portal (or none) while the picker may be open.</summary>

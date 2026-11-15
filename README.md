@@ -14,6 +14,7 @@ To show/hide the portal icons on the map and minimap, open the map as normal and
 
 Walking into a portal also opens a list of every portal you can travel to, next to the map.
 
+- Hover over a portal in the list to make its icon on the map pulse, so you can see where it is.
 - Type in the search box to show only the portals whose name or biome matches.
 - Use the **Biome** and **Distance** buttons to split the list into sections: a section per biome, a section for each set of portals near each other (such as one island's), or both, so the same biome in different parts of the world is listed apart.
 - Click the star next to a portal to make it a favourite. Favourites come first in the list and have a gold ring on the map.
