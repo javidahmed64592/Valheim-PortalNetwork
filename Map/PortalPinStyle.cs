@@ -38,8 +38,8 @@ internal static class PortalPinStyle
     private const float HighlightBrightness = 0.45f;
 
     /// <summary>The highlighted icon pulses between these sizes (times its normal size), this many times a second.</summary>
-    private const float PulseMin = 1.1f;
-    private const float PulseMax = 1.5f;
+    private const float PulseMin = 1f;
+    private const float PulseMax = 1.2f;
     private const float PulsesPerSecond = 1.2f;
 
     /// <summary>
