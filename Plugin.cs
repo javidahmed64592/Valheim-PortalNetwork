@@ -59,7 +59,7 @@ public class PortalNetworkPlugin : BaseUnityPlugin
         _setHomeKey = Config.Bind(
             "Home",
             "SetHomeKey",
-            new KeyboardShortcut(KeyCode.H, KeyCode.LeftShift),
+            new KeyboardShortcut(KeyCode.H, KeyCode.LeftAlt),
             "Press while looking at a portal to make it the world's home portal (admins and the host only).");
         _goBackKey = Config.Bind(
             "Travel",

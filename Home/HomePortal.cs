@@ -102,7 +102,7 @@ internal static class HomePortal
             return;
         }
 
-        // Only admins have the set home key, so for anyone else Shift + H (say, while running) is just H.
+        // Only admins have the set home key; for anyone else, Alt + H is just H.
         if (LocalPlayerCanSetHome() && KeyInput.IsDown(PortalNetworkPlugin._setHomeKey.Value))
         {
             PortalNetworkRpc.SendSetHomeRequest(zdo.m_uid, !IsHome(zdo.m_uid));
@@ -149,7 +149,7 @@ internal static class HomePortal
             || (PortalFavourites.TryGetGoBackKey(zdo.GetPosition(), out _) && KeyInput.IsDown(PortalNetworkPlugin._goBackKey.Value)));
     }
 
-    /// <summary>"Shift + H": modifiers first, without "Left"/"Right", matching the vanilla "Shift + E" hints.</summary>
+    /// <summary>"Alt + H": modifiers first, without "Left"/"Right", matching the vanilla "Shift + E" hints.</summary>
     internal static string KeyText(KeyboardShortcut shortcut)
     {
         List<string> parts = [];
