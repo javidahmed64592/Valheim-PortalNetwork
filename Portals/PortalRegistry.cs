@@ -22,6 +22,9 @@ internal struct PortalInfo
     public long OwnerId;
     public PortalVisibility Visibility;
     public bool IsHome;
+
+    /// <summary>Only the builder and admins may rename the portal (see <see cref="PortalRegistry.CanRename"/>).</summary>
+    public bool NameLocked;
 }
 
 internal static class PortalRegistry
@@ -38,6 +41,15 @@ internal static class PortalRegistry
     /// nobody to own it.
     /// </summary>
     internal static readonly int HomeHash = "PortalNetwork_Home".GetStableHashCode();
+
+    /// <summary>
+    /// Set by the builder or an admin to stop other players renaming the portal. Portals without it can be renamed by
+    /// anyone who can see them.
+    /// </summary>
+    internal static readonly int NameLockHash = "PortalNetwork_NameLocked".GetStableHashCode();
+
+    /// <summary>The longest name the rename box allows, the same as vanilla's when naming a portal.</summary>
+    internal const int MaxNameLength = 10;
 
     /// <summary>
     /// Portals with no stored value (built before the mod, or never changed) are Public.
@@ -64,6 +76,15 @@ internal static class PortalRegistry
         return who.IsAdmin
             || info.OwnerId == 0L
             || (who.PlayerId != 0L && info.OwnerId == who.PlayerId);
+    }
+
+    /// <summary>
+    /// Anyone who can see the portal may rename it, as anyone with access can rename it while standing at it, unless
+    /// its builder or an admin has locked the name, in which case only they may.
+    /// </summary>
+    internal static bool CanRename(PortalInfo info, Requester who)
+    {
+        return !info.NameLocked || CanChange(info, who);
     }
 
     /// <summary>Only admins and the host choose the home portal, since it is shared by everyone in the world.</summary>
@@ -154,6 +175,7 @@ internal static class PortalRegistry
             Rotation = zdo.GetRotation(),
             OwnerId = zdo.GetLong(ZDOVars.s_creator, 0L),
             Visibility = GetVisibility(zdo),
+            NameLocked = zdo.GetBool(NameLockHash, false),
         };
     }
 }
