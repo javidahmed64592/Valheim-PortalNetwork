@@ -37,6 +37,11 @@ internal static class PortalPinStyle
     /// <summary>How much of white is mixed into the highlighted portal's colour.</summary>
     private const float HighlightBrightness = 0.45f;
 
+    /// <summary>The highlighted icon pulses between these sizes (times its normal size), this many times a second.</summary>
+    private const float PulseMin = 1.1f;
+    private const float PulseMax = 1.5f;
+    private const float PulsesPerSecond = 1.2f;
+
     /// <summary>
     /// Tints the given pins, with the home colour for <paramref name="home"/>, gives favourite portals a ring, and keeps
     /// their icons and labels drawn in front of all other pins. The <paramref name="highlighted"/> pin (the portal under
@@ -57,8 +62,7 @@ internal static class PortalPinStyle
                 // Our pins sit exactly on their portal, and favourites are stored by portal position.
                 SetBorder(pin.m_iconElement, favourites.Contains(PortalFavourites.Key(pin.m_pos)));
             }
-            // Vanilla pulses the size of an animated pin, as it does for pings.
-            pin.m_animate = pin == highlighted;
+            SetSize(pin, pin == highlighted);
             if (pin == highlighted)
             {
                 continue; // added last below, so it is drawn in front
@@ -84,6 +88,38 @@ internal static class PortalPinStyle
 
         BringToFront(Icons);
         BringToFront(Names);
+    }
+
+    /// <summary>
+    /// The icon's size: normal, or pulsing while highlighted. Vanilla's own pulse (<c>m_animate</c>, used for pings) only
+    /// moves when the map redraws its pins, which it does when something on it moves, such as the player, and it never
+    /// puts the size back afterwards, so the pulse is done here every frame instead.
+    /// </summary>
+    private static void SetSize(Minimap.PinData pin, bool pulsing)
+    {
+        Minimap minimap = Minimap.instance;
+        if (pin.m_uiElement == null || minimap == null)
+        {
+            return;
+        }
+
+        float size = minimap.m_mode == Minimap.MapMode.Large ? minimap.m_pinSizeLarge : minimap.m_pinSizeSmall;
+        if (pin.m_doubleSize)
+        {
+            size *= 2f;
+        }
+        if (pulsing)
+        {
+            float wave = (Mathf.Sin(Time.unscaledTime * PulsesPerSecond * 2f * Mathf.PI) + 1f) / 2f;
+            size *= Mathf.Lerp(PulseMin, PulseMax, wave);
+        }
+
+        Vector2 current = pin.m_uiElement.rect.size;
+        if (!Mathf.Approximately(current.x, size) || !Mathf.Approximately(current.y, size))
+        {
+            pin.m_uiElement.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, size);
+            pin.m_uiElement.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, size);
+        }
     }
 
     /// <summary>
