@@ -88,7 +88,7 @@ internal static class PortalGroups
             return;
         }
 
-        List<Vector3> points = new(items.Count);
+        List<Vector3> points = [];
         foreach (T item in items)
         {
             points.Add(position(item));
