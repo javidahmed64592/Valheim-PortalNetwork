@@ -218,7 +218,7 @@ internal static class PortalMapPicker
             return;
         }
 
-        if (!Minimap.InTextInput())
+        if (!KeyInput.IsTyping())
         {
             if (CanSetHome && KeyInput.IsDown(PortalNetworkPlugin._setHomeKey.Value))
             {

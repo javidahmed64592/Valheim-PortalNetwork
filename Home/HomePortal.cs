@@ -121,6 +121,34 @@ internal static class HomePortal
         }
     }
 
+    /// <summary>
+    /// True if one of the portal keys was pressed this frame and does something here: at the portal map, or while
+    /// looking at a portal. The same conditions as the keys themselves (here and in <see cref="PortalMapPicker"/>), so
+    /// that only a key the mod uses is kept from other mods.
+    /// </summary>
+    internal static bool PortalKeyUsedThisFrame()
+    {
+        Player player = Player.m_localPlayer;
+        if (player == null || KeyInput.IsTyping())
+        {
+            return false;
+        }
+
+        if (PortalMapPicker.IsActive)
+        {
+            return (PortalMapPicker.CanSetHome && KeyInput.IsDown(PortalNetworkPlugin._setHomeKey.Value))
+                || (PortalMapPicker.CanTravelHome && KeyInput.IsDown(PortalNetworkPlugin._travelHomeKey.Value))
+                || (PortalMapPicker.CanGoBack && KeyInput.IsDown(PortalNetworkPlugin._goBackKey.Value));
+        }
+
+        TeleportWorld portal = HoveredPortal(player);
+        ZNetView nview = portal != null ? portal.GetComponent<ZNetView>() : null;
+        ZDO zdo = nview != null ? nview.GetZDO() : null;
+        return zdo != null && player.TakeInput() && ((LocalPlayerCanSetHome() && KeyInput.IsDown(PortalNetworkPlugin._setHomeKey.Value))
+            || (HasHome && !IsHome(zdo.m_uid) && KeyInput.IsDown(PortalNetworkPlugin._travelHomeKey.Value))
+            || (PortalFavourites.TryGetGoBackKey(zdo.GetPosition(), out _) && KeyInput.IsDown(PortalNetworkPlugin._goBackKey.Value)));
+    }
+
     /// <summary>"Shift + H": modifiers first, without "Left"/"Right", matching the vanilla "Shift + E" hints.</summary>
     internal static string KeyText(KeyboardShortcut shortcut)
     {
