@@ -19,7 +19,10 @@ namespace PortalNetwork.UI;
 /// Each row has a favourite star (a green house for the home portal), the portal's name and biome (click to teleport),
 /// its distance, a rename button and a name lock. The home portal comes first, then the portal the player is standing
 /// at (not clickable), then favourites, then the rest.
-/// Above the list: a "go back" button for the last trip, and a search box that filters the list by name or biome.
+/// Above the list: a "go back" button for the last trip, a search box that filters the list by name or biome, and
+/// Biome and Distance buttons that split the list into sections (see <see cref="PortalGroups"/>). Inside each section,
+/// as in the plain list: the portal the player is standing at, then favourites, then the rest by name. The home portal
+/// stays at the very top.
 /// </summary>
 internal static class PortalPickerPanel
 {
@@ -51,6 +54,8 @@ internal static class PortalPickerPanel
     private static Sprite _pencilSprite;
     private static Sprite _lockSprite;
     private static InputField _search;
+    private static Text _biomeButtonText;
+    private static Text _distanceButtonText;
 
     private static readonly List<PortalInfo> Portals = [];
     private static readonly List<GameObject> Rows = [];
@@ -190,8 +195,44 @@ internal static class PortalPickerPanel
         _goBackText.horizontalOverflow = HorizontalWrapMode.Wrap;
 
         CreateSearch(_panel.transform);
+        CreateGroupButtons(_panel.transform);
         CreateList(_panel.transform);
         return true;
+    }
+
+    /// <summary>Two buttons side by side that turn grouping by biome and by distance on and off; both are remembered.</summary>
+    private static void CreateGroupButtons(Transform parent)
+    {
+        GameObject row = new("Grouping", typeof(RectTransform));
+        row.transform.SetParent(parent, false);
+        HorizontalLayoutGroup layout = row.AddComponent<HorizontalLayoutGroup>();
+        layout.spacing = 8f;
+        SetControl(layout);
+        layout.childForceExpandWidth = true;
+        AddLayout(row, height: 32f);
+
+        _biomeButtonText = CreateGroupButton(row.transform, "$portalnetwork_group_biome", PortalNetworkPlugin._groupByBiome);
+        _distanceButtonText = CreateGroupButton(row.transform, "$portalnetwork_group_distance", PortalNetworkPlugin._groupByDistance);
+    }
+
+    private static Text CreateGroupButton(Transform row, string label, BepInEx.Configuration.ConfigEntry<bool> setting)
+    {
+        GameObject button = GUIManager.Instance.CreateButton(Localize(label), row, Vector2.zero, Vector2.zero, Vector2.zero);
+        AddLayout(button, height: 30f, flexibleWidth: 1f);
+        button.GetComponent<Button>().onClick.AddListener(() =>
+        {
+            setting.Value = !setting.Value;
+            Rebuild();
+            _scroll.verticalNormalizedPosition = 1f;
+        });
+        return button.GetComponentInChildren<Text>();
+    }
+
+    /// <summary>Lit (orange) while on, plain while off.</summary>
+    private static void UpdateGroupButtons()
+    {
+        _biomeButtonText.color = PortalNetworkPlugin._groupByBiome.Value ? GUIManager.Instance.ValheimOrange : GUIManager.Instance.ValheimBeige;
+        _distanceButtonText.color = PortalNetworkPlugin._groupByDistance.Value ? GUIManager.Instance.ValheimOrange : GUIManager.Instance.ValheimBeige;
     }
 
     private static void CreateSearch(Transform parent)
@@ -275,25 +316,90 @@ internal static class PortalPickerPanel
         }
 
         UpdateGoBack();
+        UpdateGroupButtons();
 
         HashSet<string> favourites = PortalFavourites.GetFavourites();
         string filter = _search != null ? _search.text.Trim() : "";
-        IEnumerable<(PortalInfo Portal, bool Current, bool Favourite, string Label)> rows = Portals
-            .Select(p => (Portal: p, Current: p.Id == _current,
-                Favourite: favourites.Contains(PortalFavourites.Key(p.Position)), Label: Label(p)))
-            .Where(r => filter.Length == 0 || r.Label.IndexOf(filter, System.StringComparison.CurrentCultureIgnoreCase) >= 0)
-            .OrderByDescending(r => r.Portal.IsHome)
-            .ThenByDescending(r => r.Current)
-            .ThenByDescending(r => r.Favourite)
-            .ThenBy(r => r.Label, System.StringComparer.CurrentCultureIgnoreCase);
+        List<RowData> rows = [.. Portals
+            .Select(p => new RowData(p, p.Id == _current, favourites.Contains(PortalFavourites.Key(p.Position)), Label(p)))
+            .Where(r => filter.Length == 0 || r.Label.IndexOf(filter, System.StringComparison.CurrentCultureIgnoreCase) >= 0)];
 
-        foreach ((PortalInfo portal, bool current, bool favourite, string label) in rows)
+        // The home portal stays at the very top, whatever the grouping.
+        foreach (RowData home in rows.Where(r => r.Portal.IsHome))
         {
-            Rows.Add(CreateRow(portal, current, favourite, label));
+            Rows.Add(CreateRow(home.Portal, home.Current, home.Favourite, home.Label));
+        }
+        List<RowData> rest = [.. rows.Where(r => !r.Portal.IsHome)];
+
+        bool byBiome = PortalNetworkPlugin._groupByBiome.Value;
+        bool byDistance = PortalNetworkPlugin._groupByDistance.Value;
+        if (!byBiome && !byDistance)
+        {
+            AddRows(rest);
+        }
+        else
+        {
+            foreach (PortalGroups.Group<RowData> group in PortalGroups.Build(rest, r => r.Portal.Position, BiomeAt,
+                byBiome, byDistance, _origin, PortalNetworkPlugin._groupDistance.Value))
+            {
+                Rows.Add(CreateHeader(GroupTitle(group, byBiome, byDistance)));
+                AddRows(group.Items);
+            }
         }
 
         _emptyText.gameObject.SetActive(Rows.Count == 0);
         _emptyText.text = Localize(filter.Length > 0 ? "$portalnetwork_no_matches" : "$portalnetwork_no_other_portals");
+    }
+
+    /// <summary>One row's portal and how it is shown.</summary>
+    private readonly struct RowData(PortalInfo portal, bool current, bool favourite, string label)
+    {
+        public readonly PortalInfo Portal = portal;
+        public readonly bool Current = current;
+        public readonly bool Favourite = favourite;
+        public readonly string Label = label;
+    }
+
+    /// <summary>The same order as the plain list: the portal the player is standing at, then favourites, then by name.</summary>
+    private static void AddRows(IEnumerable<RowData> rows)
+    {
+        IEnumerable<RowData> ordered = rows
+            .OrderByDescending(r => r.Current)
+            .ThenByDescending(r => r.Favourite)
+            .ThenBy(r => r.Label, System.StringComparer.CurrentCultureIgnoreCase);
+        foreach (RowData row in ordered)
+        {
+            Rows.Add(CreateRow(row.Portal, row.Current, row.Favourite, row.Label));
+        }
+    }
+
+    /// <summary>
+    /// "Mistlands", "2.1 km east", or "Mistlands · 2.1 km east". The section with the portal the player is standing at
+    /// is "Around you".
+    /// </summary>
+    private static string GroupTitle(PortalGroups.Group<RowData> group, bool byBiome, bool byDistance)
+    {
+        string biome = group.Biome == Heightmap.Biome.None
+            ? Localize("$portalnetwork_group_other")
+            : Localize("$biome_" + group.Biome.ToString().ToLowerInvariant());
+        if (!byDistance)
+        {
+            return biome;
+        }
+
+        string place = group.Items.Any(r => r.Current)
+            ? Localize("$portalnetwork_group_here")
+            : FormatDistance(Utils.DistanceXZ(_origin, group.Centre)) + " " + Localize(PortalGroups.DirectionToken(_origin, group.Centre));
+        return byBiome ? biome + " · " + place : place;
+    }
+
+    private static GameObject CreateHeader(string title)
+    {
+        GUIManager gui = GUIManager.Instance;
+        Text header = CreateText(_content, title, gui.AveriaSerifBold, 16, gui.ValheimOrange, TextAnchor.LowerLeft);
+        header.text = title;
+        AddLayout(header.gameObject, height: 26f);
+        return header.gameObject;
     }
 
     private static void UpdateGoBack()
@@ -513,6 +619,11 @@ internal static class PortalPickerPanel
     }
 
     /// <summary>Biome from world generation, so it works for portals far outside the loaded area.</summary>
+    private static Heightmap.Biome BiomeAt(Vector3 position)
+    {
+        return WorldGenerator.instance != null ? WorldGenerator.instance.GetBiome(position) : Heightmap.Biome.None;
+    }
+
     private static string BiomeName(Vector3 position)
     {
         if (WorldGenerator.instance == null)
@@ -520,7 +631,7 @@ internal static class PortalPickerPanel
             return "";
         }
 
-        Heightmap.Biome biome = WorldGenerator.instance.GetBiome(position);
+        Heightmap.Biome biome = BiomeAt(position);
         return biome == Heightmap.Biome.None
             ? ""
             : Localize("$biome_" + biome.ToString().ToLowerInvariant());
