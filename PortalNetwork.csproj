@@ -4,7 +4,7 @@
     <TargetFramework>net472</TargetFramework>
     <AssemblyName>PortalNetwork</AssemblyName>
     <Description>Teleport to any portal through a map interface without tag linking. Search, group and rename portals, travel home or back with a key, and keep portals public or private.</Description>
-    <Version>0.7.0</Version>
+    <Version>0.7.1</Version>
     <LangVersion>latest</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
