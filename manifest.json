@@ -1,7 +1,7 @@
 {
   "name": "PortalNetwork",
   "description": "Teleport to any portal through a map interface without tag linking. Search, group and rename portals, travel home or back with a key, and keep portals public or private.",
-  "version_number": "0.7.0",
+  "version_number": "0.7.1",
   "dependencies": [
     "denikson-BepInExPack_Valheim-5.4.2360",
     "ValheimModding-Jotunn-2.30.2"

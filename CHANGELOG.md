@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.1
+
+- The mod's name is now shown as "Portal Network", with a space like the other mods. Its settings are unchanged.
+
 ## 0.7.0
 
 The server and every player must update together: the portal list now carries whether a portal's name is locked.
