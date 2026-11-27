@@ -129,10 +129,14 @@ public class PortalNetworkPlugin : BaseUnityPlugin
             new ConfigDescription(
                 "Thickness of the ring around favourite portals' icons, as a fraction of the ring's size (0.5 = a filled circle).",
                 new AcceptableValueRange<float>(0.01f, 0.5f)));
+        _harmony = new Harmony(PluginGuid);
+        if (!SafePatcher.PatchAll(_harmony, Config, Logger))
+        {
+            return;
+        }
+
         PortalNetworkLocalization.Register();
         PortalNetworkRpc.Register();
-        _harmony = new Harmony(PluginGuid);
-        _harmony.PatchAll();
     }
 
     private void OnDestroy()

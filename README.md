@@ -52,11 +52,13 @@ Admins, and the host of a self-hosted world, can see every portal and change any
 ## Configuration
 
 Settings are in the BepInEx config file `javidahmed64592.portalnetwork.cfg`.
+`DisabledFeatures` under `[Debug]` is for testing: it turns parts of the mod off by name. Leave it empty to play normally.
 
 ## Compatibility
 
 - Other mods that change how portals link or teleport (such as TargetPortal) replace the same behaviour, so only use one of them.
 - The portal keys (`B`, `H`, `Alt + H`) may be bound by other mods too. When one does something at a portal or in the portal map, mods that read keys through the game's controls (such as Jotunn mods) don't also react to it; mods that read the keyboard directly still do, so change one of the keys if they clash.
+- If a game update breaks part of the mod, that part turns off on its own and the log says which one; the rest keeps working.
 - This mod has not been tested with a gamepad, only with keyboard and mouse. With a gamepad, move the map so a portal is under the crosshair and press the confirm button to travel there; the portal list needs a mouse.
 
 ## Uninstalling

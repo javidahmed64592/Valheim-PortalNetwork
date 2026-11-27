@@ -2,6 +2,8 @@ using System.Collections.Generic;
 
 using HarmonyLib;
 
+using PortalNetwork.Core;
+
 namespace PortalNetwork.Patches;
 
 /// <summary>
@@ -10,6 +12,12 @@ namespace PortalNetwork.Patches;
 /// </summary>
 internal static class PortalVisualPatches
 {
+    /// <summary>
+    /// Every placed portal glows and shows its swirl as if linked. Without it, portals look as vanilla shows them:
+    /// dark unless linked by name. Travelling through them is unaffected.
+    /// </summary>
+    public const string Feature = "Portals always look connected";
+
     private static readonly HashSet<string> Logged = [];
 
     /// <summary>
@@ -29,6 +37,7 @@ internal static class PortalVisualPatches
 /// Hover text ("connected"/"unconnected") and the vanilla glow logic read HaveTarget().
 /// </summary>
 [HarmonyPatch(typeof(TeleportWorld), "HaveTarget")]
+[Feature(PortalVisualPatches.Feature)]
 internal static class TeleportWorld_HaveTarget_Patch
 {
     private static bool Prefix(TeleportWorld __instance, ref bool __result)
@@ -44,6 +53,7 @@ internal static class TeleportWorld_HaveTarget_Patch
 }
 
 [HarmonyPatch(typeof(TeleportWorld), "TargetFound")]
+[Feature(PortalVisualPatches.Feature)]
 internal static class TeleportWorld_TargetFound_Patch
 {
     private static bool Prefix(TeleportWorld __instance, ref bool __result)
@@ -64,6 +74,7 @@ internal static class TeleportWorld_TargetFound_Patch
 /// private methods above being patched successfully.
 /// </summary>
 [HarmonyPatch(typeof(TeleportWorld), "Update")]
+[Feature(PortalVisualPatches.Feature)]
 internal static class TeleportWorld_Update_Patch
 {
     private static void Postfix(TeleportWorld __instance)
@@ -82,6 +93,7 @@ internal static class TeleportWorld_Update_Patch
 /// condition vanilla uses (player nearby and able to teleport) without the link check.
 /// </summary>
 [HarmonyPatch(typeof(TeleportWorld), "UpdatePortal")]
+[Feature(PortalVisualPatches.Feature)]
 internal static class TeleportWorld_UpdatePortal_Patch
 {
     private static void Postfix(TeleportWorld __instance)
