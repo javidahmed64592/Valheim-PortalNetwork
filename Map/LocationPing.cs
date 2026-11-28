@@ -1,5 +1,3 @@
-using PortalNetwork.Core;
-
 using UnityEngine;
 
 namespace PortalNetwork.Map;
@@ -20,7 +18,7 @@ internal static class LocationPing
     internal static void Tick()
     {
         Player player = Player.m_localPlayer;
-        if (player == null || Chat.instance == null || !KeyInput.IsDown(PortalNetworkPlugin._pingKey.Value))
+        if (player == null || Chat.instance == null || !PortalNetworkPlugin._pingKey.IsDown())
         {
             return;
         }

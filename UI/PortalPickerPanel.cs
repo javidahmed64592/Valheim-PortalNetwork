@@ -250,6 +250,7 @@ internal static class PortalPickerPanel
         AddLayout(search, height: 32f);
         _search = search.GetComponent<InputField>();
         _search.characterLimit = 40;
+        ClearButton.Add(_search);
         _search.onValueChanged.AddListener(_ =>
         {
             Rebuild();

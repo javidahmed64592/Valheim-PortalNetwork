@@ -2,8 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-using BepInEx.Configuration;
-
 using PortalNetwork.Core;
 using PortalNetwork.Map;
 
@@ -21,10 +19,10 @@ namespace PortalNetwork.UI;
 /// </summary>
 internal static class PortalKeyHint
 {
-    private sealed class Hint(string name, System.Func<KeyboardShortcut> key, System.Func<string> label, System.Func<bool> show)
+    private sealed class Hint(string name, System.Func<KeyBinding> key, System.Func<string> label, System.Func<bool> show)
     {
         public readonly string Name = name;
-        public readonly System.Func<KeyboardShortcut> Key = key;
+        public readonly System.Func<KeyBinding> Key = key;
         public readonly System.Func<string> Label = label;
         public readonly System.Func<bool> Show = show;
         public GameObject Item;
@@ -44,19 +42,19 @@ internal static class PortalKeyHint
     [
         // The picker has its own pins and the toggle does nothing while it is open.
         new("PortalNetwork_TogglePortalIcons",
-            () => PortalNetworkPlugin._toggleKey.Value,
+            () => PortalNetworkPlugin._toggleKey,
             () => "$portalnetwork_toggle_icons_hint",
             () => !PortalMapPicker.IsActive),
         new("PortalNetwork_TravelHome",
-            () => PortalNetworkPlugin._travelHomeKey.Value,
+            () => PortalNetworkPlugin._travelHomeKey,
             () => "$portalnetwork_travel_home_hint",
             () => PortalMapPicker.CanTravelHome),
         new("PortalNetwork_GoBack",
-            () => PortalNetworkPlugin._goBackKey.Value,
+            () => PortalNetworkPlugin._goBackKey,
             () => "$portalnetwork_go_back_hint",
             () => PortalMapPicker.CanGoBack),
         new("PortalNetwork_SetHome",
-            () => PortalNetworkPlugin._setHomeKey.Value,
+            () => PortalNetworkPlugin._setHomeKey,
             () => PortalMapPicker.AtHome ? "$portalnetwork_remove_home_hint" : "$portalnetwork_set_home_hint",
             () => PortalMapPicker.CanSetHome),
     ];
@@ -137,7 +135,7 @@ internal static class PortalKeyHint
 
     private static string BuildKey(Hint hint)
     {
-        return hint.Key().ToString() + "|" + hint.Label();
+        return hint.Key() + "|" + hint.Label();
     }
 
     /// <summary>
@@ -145,7 +143,7 @@ internal static class PortalKeyHint
     /// </summary>
     private static void BuildContents(Hint hint)
     {
-        KeyboardShortcut shortcut = hint.Key();
+        KeyBinding binding = hint.Key();
         hint.BuiltFor = BuildKey(hint);
 
         Transform item = hint.Item.transform;
@@ -163,8 +161,7 @@ internal static class PortalKeyHint
 
         label.GetComponent<TextMeshProUGUI>().text = PortalNetworkLocalization.Localize(hint.Label());
 
-        List<string> keys = [.. shortcut.Modifiers.Select(KeyName)];
-        keys.Add(KeyName(shortcut.MainKey));
+        List<string> keys = [.. binding.HintKeys()];
 
         for (int i = 0; i < keys.Count; i++)
         {
@@ -235,26 +232,6 @@ internal static class PortalKeyHint
         }
 
         return _keySprite;
-    }
-
-    /// <summary>
-    /// "LeftControl" -> "Left Ctrl", "Alpha1" -> "1", "P" -> "P".
-    /// </summary>
-    private static string KeyName(KeyCode key)
-    {
-        string name = key.ToString();
-        if (name.StartsWith("Alpha", System.StringComparison.Ordinal))
-        {
-            return name.Substring(5);
-        }
-
-        if (name.StartsWith("Keypad", System.StringComparison.Ordinal))
-        {
-            return "Num " + name.Substring(6);
-        }
-
-        name = name.Replace("Control", "Ctrl");
-        return WordBreak.Replace(name, " ");
     }
 
     private static void Reset()

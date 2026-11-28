@@ -169,13 +169,13 @@ internal static class TeleportWorld_GetHoverText_Patch
         }
         else if (HomePortal.HasHome)
         {
-            text += Hint(HomePortal.KeyText(PortalNetworkPlugin._travelHomeKey.Value), "$portalnetwork_travel_home_hint");
+            text += Hint(PortalNetworkPlugin._travelHomeKey.ToString(), "$portalnetwork_travel_home_hint");
         }
 
         // Only where the last trip leads is known here; whether that portal is still there is checked on the key.
         if (PortalFavourites.TryGetGoBackKey(zdo.GetPosition(), out _))
         {
-            text += Hint(HomePortal.KeyText(PortalNetworkPlugin._goBackKey.Value), "$portalnetwork_go_back_hint");
+            text += Hint(PortalNetworkPlugin._goBackKey.ToString(), "$portalnetwork_go_back_hint");
         }
 
         // Cosmetic only: the server makes the real decision when a key is pressed.
@@ -190,7 +190,7 @@ internal static class TeleportWorld_GetHoverText_Patch
 
             if (PortalRegistry.CanSetHome(who))
             {
-                text += Hint(HomePortal.KeyText(PortalNetworkPlugin._setHomeKey.Value),
+                text += Hint(PortalNetworkPlugin._setHomeKey.ToString(),
                     isHome ? "$portalnetwork_remove_home_hint" : "$portalnetwork_set_home_hint");
             }
         }

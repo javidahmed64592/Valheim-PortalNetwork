@@ -4,6 +4,9 @@
 
 - If a game update breaks part of the mod, only that part turns off and the rest keeps working: every portal glowing as if linked, other players' icons moving quickly after they teleport, and the portal keys not also triggering other mods' bindings can each turn off while the portal list still works. The log says which part is off, in one line. If the portal list itself breaks, the whole mod turns off cleanly instead of throwing errors.
 - New `DisabledFeatures` setting under `[Debug]`, for testing: turns parts of the mod off by name.
+- The portal search box clears with the red cross at the end of the box.
+- Every keybind is now a key plus an optional modifier (`None`, `Shift`, `Ctrl` or `Alt`), both picked from a list in the config, so combos like Shift + B can be bound without typing them. Settings saved by an older version carry over.
+- With `debugmode` on, this mod's key combos no longer also do what their key does in debug mode, such as Ctrl+Z also toggling flying. A key on its own still does both.
 - Updated Jotunn to 2.30.3.
 
 ## 0.7.1
