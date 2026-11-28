@@ -3,6 +3,8 @@ using System.Runtime.CompilerServices;
 
 using HarmonyLib;
 
+using PortalNetwork.Core;
+
 using UnityEngine;
 
 namespace PortalNetwork.Patches;
@@ -14,8 +16,12 @@ namespace PortalNetwork.Patches;
 /// to vanilla.
 /// </summary>
 [HarmonyPatch(typeof(Minimap), "UpdatePlayerPins")]
+[Feature(Feature)]
 internal static class Minimap_UpdatePlayerPins_Patch
 {
+    /// <summary>Without it, a teleported player's icon crawls across the map at vanilla's fixed speed.</summary>
+    public const string Feature = "Player icons after teleport";
+
     /// <summary>
     /// Player positions are only sent every 2 seconds, so a fast ship moves a few tens of metres between updates.
     /// A bigger jump than this is treated as a teleport.

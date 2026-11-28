@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- If a game update breaks part of the mod, only that part turns off and the rest keeps working: every portal glowing as if linked, other players' icons moving quickly after they teleport, and the portal keys not also triggering other mods' bindings can each turn off while the portal list still works. The log says which part is off, in one line. If the portal list itself breaks, the whole mod turns off cleanly instead of throwing errors.
+- New `DisabledFeatures` setting under `[Debug]`, for testing: turns parts of the mod off by name.
+- Updated Jotunn to 2.30.3.
+
 ## 0.7.1
 
 - The mod's name is now shown as "Portal Network", with a space like the other mods. Its settings are unchanged.
