@@ -24,11 +24,11 @@ public class PortalNetworkPlugin : BaseUnityPlugin
     public const string PluginVersion = "0.7.1";
 
     internal static ManualLogSource _log;
-    internal static ConfigEntry<KeyboardShortcut> _toggleKey;
-    internal static ConfigEntry<KeyboardShortcut> _pingKey;
-    internal static ConfigEntry<KeyboardShortcut> _travelHomeKey;
-    internal static ConfigEntry<KeyboardShortcut> _setHomeKey;
-    internal static ConfigEntry<KeyboardShortcut> _goBackKey;
+    internal static KeyBinding _toggleKey;
+    internal static KeyBinding _pingKey;
+    internal static KeyBinding _travelHomeKey;
+    internal static KeyBinding _setHomeKey;
+    internal static KeyBinding _goBackKey;
     internal static ConfigEntry<float> _otherPinOpacity;
     internal static ConfigEntry<bool> _groupByBiome;
     internal static ConfigEntry<bool> _groupByDistance;
@@ -44,30 +44,40 @@ public class PortalNetworkPlugin : BaseUnityPlugin
     private void Awake()
     {
         _log = Logger;
-        _toggleKey = Config.Bind(
+        _toggleKey = KeyBinding.Bind(
+            Config,
             "Map",
             "TogglePortalIcons",
-            new KeyboardShortcut(KeyCode.P),
+            KeyCode.P,
+            KeyModifier.None,
             "Press while the map is open to show or hide portal icons on it.");
-        _pingKey = Config.Bind(
+        _pingKey = KeyBinding.Bind(
+            Config,
             "Map",
             "PingLocation",
-            new KeyboardShortcut(KeyCode.P),
+            KeyCode.P,
+            KeyModifier.None,
             "Press while no map or menu is open to ping the spot you are looking at on everyone's map (where you stand if you look at the sky).");
-        _travelHomeKey = Config.Bind(
+        _travelHomeKey = KeyBinding.Bind(
+            Config,
             "Home",
             "TravelHomeKey",
-            new KeyboardShortcut(KeyCode.H),
+            KeyCode.H,
+            KeyModifier.None,
             "Press while looking at a portal, or with the portal map open, to travel to the home portal.");
-        _setHomeKey = Config.Bind(
+        _setHomeKey = KeyBinding.Bind(
+            Config,
             "Home",
             "SetHomeKey",
-            new KeyboardShortcut(KeyCode.H, KeyCode.LeftAlt),
+            KeyCode.H,
+            KeyModifier.Alt,
             "Press while looking at a portal to make it the world's home portal (admins and the host only).");
-        _goBackKey = Config.Bind(
+        _goBackKey = KeyBinding.Bind(
+            Config,
             "Travel",
             "GoBackKey",
-            new KeyboardShortcut(KeyCode.B),
+            KeyCode.B,
+            KeyModifier.None,
             "Press while looking at a portal, or with the portal map open, to go back to the portal of your last trip, like the portal list's \"Go back to\" button.");
         _groupByBiome = Config.Bind(
             "PortalList",

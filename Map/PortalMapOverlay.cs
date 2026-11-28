@@ -29,7 +29,7 @@ internal static class PortalMapOverlay
             return;
         }
 
-        if (Minimap.IsOpen() && !KeyInput.IsTyping() && KeyInput.IsDown(PortalNetworkPlugin._toggleKey.Value))
+        if (Minimap.IsOpen() && !KeyInput.IsTyping() && PortalNetworkPlugin._toggleKey.IsDown())
         {
             _enabled = !_enabled;
             if (!_enabled)

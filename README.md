@@ -52,6 +52,7 @@ Admins, and the host of a self-hosted world, can see every portal and change any
 ## Configuration
 
 Settings are in the BepInEx config file `javidahmed64592.portalnetwork.cfg`.
+Each keybind has a key and a `Modifier` (`None`, `Shift`, `Ctrl` or `Alt`), both picked from a list, so combos like Shift + B can be bound.
 `DisabledFeatures` under `[Debug]` is for testing: it turns parts of the mod off by name. Leave it empty to play normally.
 
 ## Compatibility

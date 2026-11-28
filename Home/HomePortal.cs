@@ -1,7 +1,4 @@
-using System;
 using System.Collections.Generic;
-
-using BepInEx.Configuration;
 
 using PortalNetwork.Core;
 using PortalNetwork.Map;
@@ -103,17 +100,17 @@ internal static class HomePortal
         }
 
         // Only admins have the set home key; for anyone else, Alt + H is just H.
-        if (LocalPlayerCanSetHome() && KeyInput.IsDown(PortalNetworkPlugin._setHomeKey.Value))
+        if (LocalPlayerCanSetHome() && PortalNetworkPlugin._setHomeKey.IsDown())
         {
             PortalNetworkRpc.SendSetHomeRequest(zdo.m_uid, !IsHome(zdo.m_uid));
         }
-        else if (KeyInput.IsDown(PortalNetworkPlugin._travelHomeKey.Value)
+        else if (PortalNetworkPlugin._travelHomeKey.IsDown()
             && !IsHome(zdo.m_uid)
             && PortalNetworkClient.CanUsePortals(player, portal))
         {
             PortalNetworkClient.RequestHomeTeleport(zdo.m_uid, zdo.GetPosition());
         }
-        else if (KeyInput.IsDown(PortalNetworkPlugin._goBackKey.Value)
+        else if (PortalNetworkPlugin._goBackKey.IsDown()
             && PortalFavourites.TryGetGoBackKey(zdo.GetPosition(), out _)
             && PortalNetworkClient.CanUsePortals(player, portal))
         {
@@ -136,42 +133,17 @@ internal static class HomePortal
 
         if (PortalMapPicker.IsActive)
         {
-            return (PortalMapPicker.CanSetHome && KeyInput.IsDown(PortalNetworkPlugin._setHomeKey.Value))
-                || (PortalMapPicker.CanTravelHome && KeyInput.IsDown(PortalNetworkPlugin._travelHomeKey.Value))
-                || (PortalMapPicker.CanGoBack && KeyInput.IsDown(PortalNetworkPlugin._goBackKey.Value));
+            return (PortalMapPicker.CanSetHome && PortalNetworkPlugin._setHomeKey.IsDown())
+                || (PortalMapPicker.CanTravelHome && PortalNetworkPlugin._travelHomeKey.IsDown())
+                || (PortalMapPicker.CanGoBack && PortalNetworkPlugin._goBackKey.IsDown());
         }
 
         TeleportWorld portal = HoveredPortal(player);
         ZNetView nview = portal != null ? portal.GetComponent<ZNetView>() : null;
         ZDO zdo = nview != null ? nview.GetZDO() : null;
-        return zdo != null && player.TakeInput() && ((LocalPlayerCanSetHome() && KeyInput.IsDown(PortalNetworkPlugin._setHomeKey.Value))
-            || (HasHome && !IsHome(zdo.m_uid) && KeyInput.IsDown(PortalNetworkPlugin._travelHomeKey.Value))
-            || (PortalFavourites.TryGetGoBackKey(zdo.GetPosition(), out _) && KeyInput.IsDown(PortalNetworkPlugin._goBackKey.Value)));
-    }
-
-    /// <summary>"Alt + H": modifiers first, without "Left"/"Right", matching the vanilla "Shift + E" hints.</summary>
-    internal static string KeyText(KeyboardShortcut shortcut)
-    {
-        List<string> parts = [];
-        foreach (KeyCode modifier in shortcut.Modifiers)
-        {
-            parts.Add(KeyName(modifier));
-        }
-        parts.Add(KeyName(shortcut.MainKey));
-        return string.Join(" + ", parts);
-    }
-
-    private static string KeyName(KeyCode key)
-    {
-        string name = key.ToString();
-        foreach (string side in new[] { "Left", "Right" })
-        {
-            if (name.StartsWith(side, StringComparison.Ordinal) && name.Length > side.Length)
-            {
-                return name.Substring(side.Length);
-            }
-        }
-        return name;
+        return zdo != null && player.TakeInput() && ((LocalPlayerCanSetHome() && PortalNetworkPlugin._setHomeKey.IsDown())
+            || (HasHome && !IsHome(zdo.m_uid) && PortalNetworkPlugin._travelHomeKey.IsDown())
+            || (PortalFavourites.TryGetGoBackKey(zdo.GetPosition(), out _) && PortalNetworkPlugin._goBackKey.IsDown()));
     }
 
     private static TeleportWorld HoveredPortal(Player player)

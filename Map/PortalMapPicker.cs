@@ -266,17 +266,17 @@ internal static class PortalMapPicker
 
         if (!KeyInput.IsTyping())
         {
-            if (CanSetHome && KeyInput.IsDown(PortalNetworkPlugin._setHomeKey.Value))
+            if (CanSetHome && PortalNetworkPlugin._setHomeKey.IsDown())
             {
                 // The list and pins update when the server announces the new home portal.
                 PortalNetworkRpc.SendSetHomeRequest(_entered, !AtHome);
             }
-            else if (CanTravelHome && KeyInput.IsDown(PortalNetworkPlugin._travelHomeKey.Value))
+            else if (CanTravelHome && PortalNetworkPlugin._travelHomeKey.IsDown())
             {
                 Teleport(_home.Portal);
                 return;
             }
-            else if (KeyInput.IsDown(PortalNetworkPlugin._goBackKey.Value) && TryGetGoBack(out PortalInfo back))
+            else if (PortalNetworkPlugin._goBackKey.IsDown() && TryGetGoBack(out PortalInfo back))
             {
                 Teleport(back);
                 return;
